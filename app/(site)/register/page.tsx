@@ -12,6 +12,7 @@ const Contact = () => {
     faculty: "",
     major: "",
     phone: "",
+    password: "", // เพิ่มฟิลด์รหัสผ่าน
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -20,10 +21,14 @@ const Contact = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.password.length < 6 || formData.password.length > 10) {
+      alert("รหัสผ่านต้องมีความยาวระหว่าง 6 ถึง 10 ตัวอักษร");
+      return;
+    }
     try {
       const response = await axios.post("/api/member", formData);
       alert(response.data.message);
-      setFormData({ studentId: "", fullName: "", faculty: "", major: "", phone: "" });
+      setFormData({ studentId: "", fullName: "", faculty: "", major: "", phone: "", password: "" });
     } catch (error) {
       console.error("Error submitting form:", error);
       alert("เกิดข้อผิดพลาดในการส่งข้อมูล");
@@ -32,7 +37,6 @@ const Contact = () => {
 
   return (
     <>
-      {/* <!-- ===== Contact Start ===== --> */}
       <section id="support" className="px-4 md:px-8 2xl:px-0">
         <div className="relative mx-auto max-w-c-1390 px-7.5 pt-10 lg:px-15 lg:pt-15 xl:px-20 xl:pt-20">
           <div className="absolute left-0 top-0 -z-1 h-2/3 w-full rounded-lg bg-gradient-to-t from-transparent to-[#dee7ff47] dark:bg-gradient-to-t dark:to-[#252A42]"></div>
@@ -51,7 +55,7 @@ const Contact = () => {
             />
           </div>
 
-          <div className="flex flex-col-reverse flex-wrap gap-8 md:flex-row md:flex-nowrap md:justify-between xl:gap-20">
+          <div className="flex flex-col gap-8">
             <motion.div
               variants={{
                 hidden: {
@@ -67,7 +71,7 @@ const Contact = () => {
               whileInView="visible"
               transition={{ duration: 1, delay: 0.1 }}
               viewport={{ once: true }}
-              className="animate_top w-full rounded-lg bg-white p-7.5 shadow-solid-8 dark:border dark:border-strokedark dark:bg-black md:w-3/5 lg:w-3/4 xl:p-15"
+              className="animate_top w-full rounded-lg bg-white p-7.5 shadow-solid-8 dark:border dark:border-strokedark dark:bg-black xl:p-15"
             >
               <h2 className="mb-15 text-3xl font-semibold text-black dark:text-white xl:text-sectiontitle2">
                 แบบฟอร์มลงทะเบียน
@@ -125,6 +129,17 @@ const Contact = () => {
                   />
                 </div>
 
+                <div className="mb-11.5 flex">
+                  <input
+                    name="password"
+                    type="password"
+                    placeholder="รหัสผ่าน"
+                    className="w-full border-b border-stroke bg-transparent pb-3.5 focus:border-waterloo focus:placeholder:text-black focus-visible:outline-none dark:border-strokedark dark:focus:border-manatee dark:focus:placeholder:text-white"
+                    onChange={handleChange}
+                    value={formData.password}
+                  />
+                </div>
+
                 <div className="flex flex-wrap gap-4 xl:justify-between">
                   <button
                     type="submit"
@@ -149,55 +164,9 @@ const Contact = () => {
                 </div>
               </form>
             </motion.div>
-
-            <motion.div
-              variants={{
-                hidden: {
-                  opacity: 0,
-                  y: -20,
-                },
-                visible: {
-                  opacity: 1,
-                  y: 0,
-                },
-              }}
-              initial="hidden"
-              whileInView="visible"
-              transition={{ duration: 2, delay: 0.1 }}
-              viewport={{ once: true }}
-              className="animate_top w-full md:w-2/5 md:p-7.5 lg:w-[26%] xl:pt-15"
-            >
-              <h2 className="mb-12.5 text-3xl font-semibold text-black dark:text-white xl:text-sectiontitle2">
-                หมายเหตุ
-              </h2>
-
-              <div className="5 mb-7">
-                <h3 className="mb-4 text-metatitle3 font-medium text-black dark:text-white">
-                  การชำระเงิน
-                </h3>
-                <p>290 Maryam Springs 260, Courbevoie, Paris, France</p>
-              </div>
-              <div className="5 mb-7">
-                <h3 className="mb-4 text-metatitle3 font-medium text-black dark:text-white">
-                  ช่องทางการชำระเงิน
-                </h3>
-                <p>
-                  <a href="#">yourmail@domainname.com</a>
-                </p>
-              </div>
-              <div>
-                <h4 className="mb-4 text-metatitle3 font-medium text-black dark:text-white">
-                  สอบถามเพิ่มเติม
-                </h4>
-                <p>
-                  <a href="#">+009 42334 6343 843</a>
-                </p>
-              </div>
-            </motion.div>
           </div>
         </div>
       </section>
-      {/* <!-- ===== Contact End ===== --> */}
     </>
   );
 };
