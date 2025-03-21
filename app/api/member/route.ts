@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import pool from './db'; // นำเข้าจาก db.js
+import pool from '../../../lib/db'; // นำเข้าจาก db.js
 import bcrypt from 'bcrypt'; // นำเข้า bcrypt สำหรับการเข้ารหัสรหัสผ่าน
 
 export async function POST(req) {
   try {
     // รับข้อมูลจาก request
-    const { studentId, fullName, faculty, program, phone, password } = await req.json();
+    const { studentId, fullName, faculty, major, phone, password, graduation, rentGown, gownSize, pin, photo } = await req.json();
 
     // ตรวจสอบว่ามีการส่ง password มาหรือไม่ และเป็นสตริงหรือไม่
     if (typeof password !== 'string' || password.length === 0) {
@@ -18,10 +18,12 @@ export async function POST(req) {
     // เชื่อมต่อกับฐานข้อมูล
     const client = await pool.connect();
     
+    console.log("major", major);
+
     // สั่งให้ insert ข้อมูลลง tb_member
     const result = await client.query(
-      "INSERT INTO tb_member (std_code, name, faculty, program, phone, password) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-      [studentId, fullName, faculty, program, phone, hashedPassword]
+      "INSERT INTO tb_member (std_code, name, faculty, program, phone, password, graduation, rentGown, gownSize, pin, photo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *",
+      [studentId, fullName, faculty, major, phone, hashedPassword, graduation, rentGown, gownSize, pin, photo]
     );
 
     // ปล่อยการเชื่อมต่อ
