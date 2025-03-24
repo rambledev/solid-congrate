@@ -13,22 +13,19 @@ export default function Home() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     try {
       const response = await axios.post('/api/auth/login', {
         username,
         password,
       });
-      console.log("response data user", response.data.user);
-
+  
       if (response.data.success) {
-        // หากล็อกอินสำเร็จ คุณสามารถ redirect หรือทำอย่างอื่นที่คุณต้องการ เช่นเก็บข้อมูลผู้ใช้ใน localStorage
-        // localStorage.setItem('user', JSON.stringify(response.data.user));
-
+        // เก็บข้อมูลผู้ใช้ใน sessionStorage
+        sessionStorage.setItem('user', JSON.stringify(response.data.user));
         
-
         alert("Login successful!");
-        router.push("/register"); // ใส่เส้นทางที่คุณต้องการไปยังหน้า หลังจากล็อกอินสำเร็จ
+        router.push("/profile"); // ใส่เส้นทางที่คุณต้องการไปยังหน้า หลังจากล็อกอินสำเร็จ
       }
     } catch (error) {
       if (error.response) {

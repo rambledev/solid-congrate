@@ -3,9 +3,9 @@ import { Menu } from "@/types/menu";
 const menuData: Menu[] = [
   {
     id: 1,
-    title: "Home",
+    title: "Profile",
     newTab: false,
-    path: "/",
+    path: "/profile",
   },
   {
     id: 2,
@@ -13,12 +13,12 @@ const menuData: Menu[] = [
     newTab: false,
     path: "/payment",
   },
-  // {
-  //   id: 2.1,
-  //   title: "Blog",
-  //   newTab: false,
-  //   path: "/blog",
-  // },
+  {
+    id: 2.1,
+    title: "การชำระเงิน",
+    newTab: false,
+    path: "/payment",
+  },
   // {
   //   id: 2.3,
   //   title: "Docs",
