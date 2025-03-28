@@ -1,0 +1,73 @@
+.stdlist-container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+    text-align: center;
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.member-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.member-table th,
+.member-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.member-table th {
+    background-color: #4285f4;
+    color: white;
+}
+
+.pagination {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.page-button {
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 15px;
+    margin: 0 5px;
+    cursor: pointer;
+}
+
+.page-button:hover {
+    background-color: #357ae8;
+}
+
+.show-all-button, .print-button {
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 15px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.show-all-button:hover, .print-button:hover {
+    background-color: #357ae8;
+}

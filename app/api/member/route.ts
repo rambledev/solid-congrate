@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import pool from '../../../lib/db'; // นำเข้าจาก db.js
 import bcrypt from 'bcrypt'; // นำเข้า bcrypt สำหรับการเข้ารหัสรหัสผ่าน
 
+// ฟังก์ชันสำหรับการสร้างสมาชิกใหม่
 export async function POST(req) {
   try {
     // รับข้อมูลจาก request
@@ -15,19 +16,11 @@ export async function POST(req) {
     // เข้ารหัสรหัสผ่าน
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // เชื่อมต่อกับฐานข้อมูล
-    const client = await pool.connect();
-    
-    console.log("major", major);
-
     // สั่งให้ insert ข้อมูลลง tb_member
-    const result = await client.query(
+    const result = await pool.query(
       "INSERT INTO tb_member (std_code, name, faculty, program, phone, password, graduation, rentGown, gownSize, pin, photo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *",
       [studentId, fullName, faculty, major, phone, hashedPassword, graduation, rentGown, gownSize, pin, photo]
     );
-
-    // ปล่อยการเชื่อมต่อ
-    client.release();
 
     // ส่งข้อมูลกลับ
     return NextResponse.json({ 
@@ -43,3 +36,4 @@ export async function POST(req) {
     }, { status: 500 });
   }
 }
+

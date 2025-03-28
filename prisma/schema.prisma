@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model tb_checklist {
+  id        Int      @id @default(autoincrement())
+  std_code  String   @db.VarChar(50)
+  timestamp DateTime @default(now()) @db.Timestamp(6)
+  check_by  Int
+  status    String   @db.VarChar(20)
+}
+
+model tb_member {
+  id         Int     @id @default(autoincrement())
+  name       String  @db.VarChar(100)
+  std_code   String  @db.VarChar(50)
+  faculty    String? @db.VarChar(100)
+  program    String? @db.VarChar(100)
+  phone      String? @db.VarChar(15)
+  password   String?
+  graduation String? @db.VarChar(50)
+  rentgown   String? @db.VarChar(50)
+  gownsize   String? @db.VarChar(10)
+  pin        String? @db.VarChar(50)
+  photo      String? @db.VarChar(50)
+}
