@@ -31,7 +31,7 @@ const StdList: React.FC = () => {
     useEffect(() => {
         const fetchMembers = async () => {
             try {
-                const response = await axios.get('http://localhost:3000/api/member/allmember');
+                const response = await axios.get('/api/member/allmember');
                 if (response.data && Array.isArray(response.data.data)) {
                     setMembers(response.data.data);
                 } else {

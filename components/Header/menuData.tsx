@@ -1,80 +1,62 @@
 import { Menu } from "@/types/menu";
 
-const menuData: Menu[] = [
-  {
-    id: 1,
-    title: "Profile",
-    newTab: false,
-    path: "/profile",
-  },
-  {
-    id: 2,
-    title: "การชำระเงิน",
-    newTab: false,
-    path: "/payment",
-  },
-  {
-    id: 2.1,
-    title: "การชำระเงิน",
-    newTab: false,
-    path: "/payment",
-  },
-  // {
-  //   id: 2.3,
-  //   title: "Docs",
-  //   newTab: false,
-  //   path: "/docs",
-  // },
-  // {
-  //   id: 3,
-  //   title: "Pages",
-  //   newTab: false,
-  //   submenu: [
-  //     {
-  //       id: 31,
-  //       title: "Blog Grid",
-  //       newTab: false,
-  //       path: "/blog",
-  //     },
-  //     {
-  //       id: 34,
-  //       title: "Sign In",
-  //       newTab: false,
-  //       path: "/auth/signin",
-  //     },
-  //     {
-  //       id: 35,
-  //       title: "Sign Up",
-  //       newTab: false,
-  //       path: "/auth/signup",
-  //     },
-  //     {
-  //       id: 35,
-  //       title: "Docs",
-  //       newTab: false,
-  //       path: "/docs",
-  //     },
-  //     {
-  //       id: 35.1,
-  //       title: "Support",
-  //       newTab: false,
-  //       path: "/support",
-  //     },
-  //     {
-  //       id: 36,
-  //       title: "404",
-  //       newTab: false,
-  //       path: "/error",
-  //     },
-  //   ],
-  // },
+const menuData: Record<string, Menu[]> = {
+  admin: [
+    {
+      id: 1,
+      title: "Dashboard",
+      newTab: false,
+      path: "/admin/dashboard",
+    },
+    {
+      id: 2,
+      title: "Manage Users",
+      newTab: false,
+      path: "/admin/users",
+    },
+    {
+      id: 3,
+      title: "Profile",
+      newTab: false,
+      path: "/profile",
+    },
+    {
+      id: 4,
+      title: "การชำระเงิน",
+      newTab: false,
+      path: "/payment",
+    },
+  ],
 
-  // {
-  //   id: 4,
-  //   title: "Support",
-  //   newTab: false,
-  //   path: "/support",
-  // },
-];
+  cio: [
+    {
+      id: 1,
+      title: "Dashboard",
+      newTab: false,
+      path: "/cio-dashboard",
+    },
+    {
+      id: 2,
+      title: "Emp",
+      newTab: false,
+      path: "/emplist",
+    },
+  ],
+
+  std: [
+    {
+      id: 1,
+      title: "ข้อมูลส่วนตัว",
+      newTab: false,
+      path: "/profile",
+    },
+    {
+      id: 2,
+      title: "เช็คชื่อ",
+      newTab: false,
+      path: "/check-history",
+    },
+  ],
+};
 
 export default menuData;

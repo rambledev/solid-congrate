@@ -18,6 +18,9 @@ const Profile = () => {
   const [newPassword, setNewPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  const [errorMessagePass, setErrorMessagePass] = useState("");
+  const [successMessagePass, setSuccessMessagePass] = useState("");
   
   useEffect(() => {
     // ดึงข้อมูลผู้ใช้จาก sessionStorage
@@ -54,24 +57,37 @@ const Profile = () => {
   const handleChangePassword = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.put('/api/user/change-password', { password: newPassword });
+      const response = await axios.put('/api/user/change-password', { 
+        password: newPassword ,
+        std_code: userInfo.std_code
+      });
       if (response.data.success) {
-        setSuccessMessage("Password changed successfully!");
+        setSuccessMessagePass("Password changed successfully!");
         setNewPassword(""); // รีเซ็ตฟิลด์รหัสผ่านใหม่
       } else {
-        setErrorMessage(response.data.message || "An error occurred");
+        setErrorMessagePass(response.data.message || "An error occurred");
       }
     } catch (error) {
-      setErrorMessage(error.response ? error.response.data.message : "An error occurred");
+      setErrorMessagePass(error.response ? error.response.data.message : "An error occurred");
     }
   };
 
   return (
-    <main className="p-8">
+    <section className="overflow-hidden pb-20 pt-35 md:p-20 xl:pb-25 xl:pt-20">
+    <main >
       <h1 className="text-2xl font-bold">Profile</h1>
 
       {/* Profile Form */}
       <form onSubmit={handleProfileSubmit} className="my-4">
+      <input
+          type="text"
+          placeholder="Student Code"
+          value={userInfo.std_code}
+          onChange={(e) => setUserInfo({ ...userInfo, std_code: e.target.value })}
+          className="mb-3 p-2 border border-gray-300 rounded w-full"
+          required
+          readOnly
+        />
         <input
           type="text"
           placeholder="Name"
@@ -80,14 +96,7 @@ const Profile = () => {
           className="mb-3 p-2 border border-gray-300 rounded w-full"
           required
         />
-        <input
-          type="text"
-          placeholder="Student Code"
-          value={userInfo.std_code}
-          onChange={(e) => setUserInfo({ ...userInfo, std_code: e.target.value })}
-          className="mb-3 p-2 border border-gray-300 rounded w-full"
-          required
-        />
+        
         <input
           type="text"
           placeholder="Faculty"
@@ -122,6 +131,15 @@ const Profile = () => {
       {/* Change Password Form */}
       <h2 className="text-xl font-bold mt-8">Change Password</h2>
       <form onSubmit={handleChangePassword} className="my-4">
+      <input
+          type="hidden"
+          placeholder="Student Code"
+          value={userInfo.std_code}
+          onChange={(e) => setUserInfo({ ...userInfo, std_code: e.target.value })}
+          className="mb-3 p-2 border border-gray-300 rounded w-full"
+          required
+          readOnly
+        />
         <input
           type="password"
           placeholder="New Password"
@@ -136,10 +154,11 @@ const Profile = () => {
         >
           Change Password
         </button>
-        {errorMessage && <p className="text-red-500 mt-2">{errorMessage}</p>}
-        {successMessage && <p className="text-green-500 mt-2">{successMessage}</p>}
+        {errorMessagePass&& <p className="text-red-500 mt-2">{errorMessagePass}</p>}
+        {successMessagePass && <p className="text-green-500 mt-2">{successMessagePass}</p>}
       </form>
     </main>
+    </section>
   );
 };
 

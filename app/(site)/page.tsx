@@ -22,7 +22,29 @@ export default function Home() {
   
       if (response.data.success) {
         // เก็บข้อมูลผู้ใช้ใน sessionStorage
-        sessionStorage.setItem('user', JSON.stringify(response.data.user));
+        // สร้างข้อมูลผู้ใช้และ role จาก response
+
+        let role = response.data.role; // กำหนด role จากข้อมูลที่ได้มา
+
+    // ตรวจสอบว่า username เป็น "admin" หรือไม่
+    if (username === "admin") {
+      role = "admin";  // ถ้า username เป็น "admin" กำหนด role เป็น "admin"
+    }else if (username === "cio"){
+      role = "cio";
+    }else {
+      role = "std";
+    }
+
+    // สร้างข้อมูลผู้ใช้และ role
+    const userData = {
+      user: response.data.user,
+      role: role,  // ใช้ role ที่กำหนด
+    };
+
+
+
+    // เก็บข้อมูลทั้ง user และ role ใน sessionStorage
+    sessionStorage.setItem('userData', JSON.stringify(userData));
         
         alert("Login successful!");
         router.push("/profile"); // ใส่เส้นทางที่คุณต้องการไปยังหน้า หลังจากล็อกอินสำเร็จ

@@ -5,7 +5,7 @@ import pool from '../../../lib/db'; // นำเข้าจาก db.js
 export async function POST(req) {
   try {
     // รับข้อมูลจาก request
-    const { std_code, check_by, status, timestamp } = await req.json();
+    const { std_code, check_by, status, timestamp, round, location } = await req.json();
 
     // ตรวจสอบหากมีข้อมูลซ้ำในวันเดียวกัน
     const existingEntry = await pool.query(`
@@ -22,8 +22,8 @@ export async function POST(req) {
 
     // สั่งให้ insert ข้อมูลลง tb_checklist
     const result = await pool.query(
-      "INSERT INTO tb_checklist (std_code, timestamp, check_by, status) VALUES ($1, $2, $3, $4) RETURNING *",
-      [std_code, timestamp, check_by, status]
+      "INSERT INTO tb_checklist (std_code, timestamp, check_by, status, round, location) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+      [std_code, timestamp, check_by, status, round, location] // เพิ่ม round และ location
     );
 
     // ส่งข้อมูลกลับ

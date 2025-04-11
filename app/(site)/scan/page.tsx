@@ -10,6 +10,7 @@ import Swal from 'sweetalert2';
 export default function ScanPage() {
   const [scanResult, setScanResult] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState<boolean>(true);
+  const [selectedLocation, setSelectedLocation] = useState<string>(""); // State สำหรับเก็บค่า select
   const yourCheckByValue = 1; // แทนที่ด้วย ID ของผู้เช็ค
   const yourStatusValue = "completed"; // เปลี่ยนเป็นสถานะที่ต้องการ
 
@@ -51,15 +52,15 @@ export default function ScanPage() {
       hour12: false,
     };
 
-    const formatter = new Intl.DateTimeFormat('sv-SE', options); // 'sv-SE' จะให้ format เป็น yyyy-MM-dd HH:mm:ss
-    const formattedDateTime = formatter.format(currentDateTime).replace("T", " "); // เปลี่ยน T เป็น space
+    const formatter = new Intl.DateTimeFormat('sv-SE', options);
+    const formattedDateTime = formatter.format(currentDateTime).replace("T", " ");
     return formattedDateTime;
   };
 
   const saveData = async (stdCode: string | null) => {
     if (!stdCode) return;
 
-    const formattedTimestamp = formatDateToBangkok(); // ใช้ฟังก์ชันที่สร้างขึ้น
+    const formattedTimestamp = formatDateToBangkok();
 
     try {
       const response = await fetch('/api/savescan', {
@@ -71,7 +72,8 @@ export default function ScanPage() {
           std_code: stdCode,
           check_by: yourCheckByValue,
           status: yourStatusValue,
-          timestamp: formattedTimestamp, // รับ timestamp ที่จัดรูปแบบ
+          timestamp: formattedTimestamp,
+          location: selectedLocation, // ส่งค่า location ไปด้วย
         }),
       });
 
@@ -87,6 +89,7 @@ export default function ScanPage() {
         });
         setScanResult(null);
         setIsScanning(true);
+        // ค่า selectedLocation จะไม่ถูกรีเซ็ต
       } else {
         if (data.error === 'Duplicate entry') {
           Swal.fire({
@@ -114,25 +117,11 @@ export default function ScanPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
-      <h1 className="text-3xl font-bold mb-4">HTML5 QR Code Scanner</h1>
+      <h1 className="text-3xl font-bold mb-4">QR Code Scanner</h1>
       <Card className="w-full max-w-md p-4 shadow-lg">
         <div className="flex flex-col items-center gap-4">
-          {isScanning ? (
-            <div id="reader" className="w-full max-w-xs" style={{ width: '100%', maxHeight: '400px' }}></div> 
-          ) : (
-            <div className="p-2 bg-gray-200 rounded-md w-full text-center">
-              <p className="text-sm font-semibold">📌 ผลลัพธ์ที่สแกนได้:</p>
-              <p className="text-lg break-words text-blue-600 font-bold">{scanResult}</p>
-              <Button
-                onClick={() => saveData(scanResult)}
-                className="mt-4"
-              >
-                บันทึก
-              </Button>
-            </div>
-          )}
 
-          {isScanning ? (
+        {isScanning ? (
             <Button
               onClick={() => setIsScanning(false)}
               className="flex items-center gap-2"
@@ -150,6 +139,36 @@ export default function ScanPage() {
               <RefreshCw className="w-5 h-5" /> สแกนอีกครั้ง
             </Button>
           )}
+
+
+          {/* แสดง select ตลอดเวลา */}
+          <select
+            value={selectedLocation}
+            onChange={(e) => setSelectedLocation(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded"
+          >
+            <option value="">- เลือกสถานที่ -</option>
+            <option value="คณะเทคโนโลยีสารสนเทศ">คณะเทคโนโลยีสารสนเทศ</option>
+            <option value="กองพัฒ">กองพัฒ</option>
+            <option value="หอประชุม">หอประชุม</option>
+          </select>
+
+          {isScanning ? (
+            <div id="reader" className="w-full max-w-xs" style={{ width: '100%', maxHeight: '400px' }}></div> 
+          ) : (
+            <div className="p-2 bg-gray-200 rounded-md w-full text-center">
+              <p className="text-sm font-semibold">📌 ผลลัพธ์ที่สแกนได้:</p>
+              <p className="text-lg break-words text-green-600 font-bold">{scanResult}</p>
+              <Button
+                onClick={() => saveData(scanResult)}
+                className="mt-4"
+              >
+                บันทึก
+              </Button>
+            </div>
+          )}
+
+          
         </div>
       </Card>
     </div>
