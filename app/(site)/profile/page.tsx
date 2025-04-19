@@ -36,7 +36,7 @@ const Profile = () => {
         password: "", // ไม่ต้องแสดงรหัสผ่านในฟอร์ม
       });
     } else {
-      router.push("/login"); // ถ้าผู้ใช้ไม่ได้ล็อกอิน ให้ส่งไปหน้า login
+      //router.push("/login"); // ถ้าผู้ใช้ไม่ได้ล็อกอิน ให้ส่งไปหน้า login
     }
   }, [router]);
 
