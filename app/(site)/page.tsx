@@ -43,17 +43,51 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-900 to-red-900 text-white pb-20">
       {/* Header Banner */}
-      <div className="text-center p-6 bg-green-800">
-        <Image
-          src="/logo-100-ปี-rmu.png"
-          alt="RMU Logo"
-          width={120}
-          height={120}
-          className="mx-auto"
-        />
-        <h1 className="text-3xl font-bold mt-4">CONGRATE</h1>
-        <p className="text-lg">ระบบลงทะเบียนรับปริญญา</p>
-      </div>
+<div
+  className="bg-green-800 text-white py-6 px-4 relative overflow-hidden"
+  style={{
+    backgroundImage: "url('/bg-thai-pattern.png')",
+    backgroundSize: "contain",
+    backgroundRepeat: "repeat",
+    backgroundPosition: "center",
+    opacity: 1,
+  }}
+>
+  {/* Overlay ขาวบางเพื่อความชัดของข้อความ */}
+  <div className="absolute inset-0 bg-white opacity-5 pointer-events-none z-0" />
+
+  <div
+  className="relative text-white px-4 py-10 bg-cover bg-center"
+  style={{
+    backgroundImage: "url('/bg-praewa.png')",
+  }}
+>
+  <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center md:items-center justify-center gap-6">
+    <div className="flex-shrink-0">
+      <Image
+        src="/logo-100-ปี-rmu.png"
+        alt="RMU Logo"
+        width={200}
+        height={200}
+        priority
+      />
+    </div>
+
+    <div className="text-center md:text-left">
+      <h1 className="text-2xl md:text-3xl font-bold leading-tight">
+        ระบบรับปริญญา 2568  มหาวิทยาลัยราชภัฏมหาสารคาม
+      </h1>
+      <p className="text-lg md:text-xl mt-1">
+       
+      </p>
+    </div>
+  </div>
+</div>
+
+</div>
+
+
+
 
       {/* 2-Column Section */}
       <div className="max-w-7xl mx-auto mt-10 px-4 grid grid-cols-1 md:grid-cols-2 gap-6">
