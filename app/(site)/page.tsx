@@ -1,102 +1,57 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-
-type Graduate = {
-  studentId: string;
-  name: string;
-  faculty: string;
-  major: string;
-};
+import { useRouter } from "next/navigation";
+import Banner from "@/components/Banner";
 
 export default function Home() {
+  const router = useRouter();
   const [studentId, setStudentId] = useState("");
   const [name, setName] = useState("");
   const [gradYear, setGradYear] = useState("");
-  const [results, setResults] = useState<Graduate[]>([]);
+  const [results, setResults] = useState<any[]>([]);
   const [isSearched, setIsSearched] = useState(false);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const dummyData: Graduate[] = [
-      {
-        studentId: "6401122334455",
-        name: "สมชาย ใจดี",
-        faculty: "ครุศาสตร์",
-        major: "การศึกษาปฐมวัย",
-      },
-      {
-        studentId: "6402233445566",
-        name: "สมหญิง ศรีสุข",
-        faculty: "วิทยาการคอมพิวเตอร์",
-        major: "เทคโนโลยีสารสนเทศ",
-      },
-    ];
-
-    setResults(dummyData);
-    setIsSearched(true);
+    try {
+      const res = await fetch("/api/student/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          std_code: studentId,
+          name_th: name,
+          grad_year: gradYear,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setResults(data.data);
+        setIsSearched(true);
+      } else {
+        setResults([]);
+        alert("ไม่พบข้อมูลนักศึกษา");
+      }
+    } catch (err) {
+      console.error("Search error:", err);
+      alert("เกิดข้อผิดพลาดในการค้นหา");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-900 to-red-900 text-white pb-20">
-      {/* Header Banner */}
-<div
-  className="bg-green-800 text-white py-6 px-4 relative overflow-hidden"
-  style={{
-    backgroundImage: "url('/bg-thai-pattern.png')",
-    backgroundSize: "contain",
-    backgroundRepeat: "repeat",
-    backgroundPosition: "center",
-    opacity: 1,
-  }}
->
-  {/* Overlay ขาวบางเพื่อความชัดของข้อความ */}
-  <div className="absolute inset-0 bg-white opacity-5 pointer-events-none z-0" />
+    <main className="bg-gradient-to-b from-green-900 to-red-900 min-h-screen text-white px-4 py-8">
+      {/* Header Banner Component */}
+      <Banner />
 
-  <div
-  className="relative text-white px-4 py-10 bg-cover bg-center"
-  style={{
-    backgroundImage: "url('/bg-praewa.png')",
-  }}
->
-  <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center md:items-center justify-center gap-6">
-    <div className="flex-shrink-0">
-      <Image
-        src="/logo-100-ปี-rmu.png"
-        alt="RMU Logo"
-        width={200}
-        height={200}
-        priority
-      />
-    </div>
-
-    <div className="text-center md:text-left">
-      <h1 className="text-2xl md:text-3xl font-bold leading-tight">
-        ระบบรับปริญญา 2568  มหาวิทยาลัยราชภัฏมหาสารคาม
-      </h1>
-      <p className="text-lg md:text-xl mt-1">
-       
-      </p>
-    </div>
-  </div>
-</div>
-
-</div>
-
-
-
-
-      {/* 2-Column Section */}
-      <div className="max-w-7xl mx-auto mt-10 px-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Panel 1: Search */}
+      {/* Search Panel */}
+      <div className="max-w-7xl mx-auto mt-10 px-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded shadow-md text-black">
+          <h2 className="text-xl font-semibold text-green-800 text-center mb-4">
+            ค้นหารายชื่อบัณฑิต
+          </h2>
           <form onSubmit={handleSearch} className="space-y-4">
-            <h2 className="text-xl font-semibold text-green-800 text-center mb-4">
-              ค้นหารายชื่อนักศึกษา
-            </h2>
             <input
               type="text"
               placeholder="รหัสนักศึกษา"
@@ -125,79 +80,118 @@ export default function Home() {
               ค้นหา
             </button>
           </form>
+
+          {/* Search Result Panel (แสดงผลลัพธ์ใต้ฟอร์มในมือถือ) */}
+          {isSearched && (
+            <div className="mt-6 block lg:hidden">
+              <div className="bg-white p-4 rounded shadow-md text-black">
+                <h3 className="text-lg font-bold text-green-800 text-center mb-4">
+                  ผลการค้นหา
+                </h3>
+                {results.length > 0 ? (
+                  <div className="space-y-4">
+                  {results.map((student) => (
+                    <div key={student.id} className="border border-green-700 rounded p-4 shadow">
+                      <p className="text-sm"><strong>รหัส:</strong> {student.std_code}</p>
+                      <p className="text-sm"><strong>ชื่อ:</strong> {student.name_th}</p>
+                      <p className="text-sm"><strong>คณะ:</strong> {student.faculty}</p>
+                      <p className="text-sm"><strong>สาขา:</strong> {student.program}</p>
+                      <div className="mt-3 text-right">
+                        <button
+                          onClick={() => router.push(`/detail?std_code=${student.std_code}`)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded"
+                        >
+                          รายละเอียด
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                ) : (
+                  <p className="text-center text-red-600">ไม่พบข้อมูลบัณฑิต</p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Panel 2: ขั้นตอน */}
+        {/* Registration Steps Panel */}
         <div className="bg-white p-6 rounded shadow-md text-black">
-          <div className="space-y-3">
-            <h2 className="text-xl font-semibold text-green-800 text-center mb-4">
-              ขั้นตอนการลงทะเบียนรับปริญญา
-            </h2>
-            <ol className="list-decimal pl-6 text-gray-800 space-y-2">
-              <li>เข้าสู่ระบบด้วยรหัสนักศึกษา</li>
-              <li>กรอกข้อมูลส่วนตัวให้ครบถ้วน</li>
-              <li>เลือกวันและรอบฝึกซ้อม</li>
-              <li>อัปโหลดเอกสารที่จำเป็น</li>
-              <li>ตรวจสอบสถานะการอนุมัติ</li>
-              <li>รับ QR Code สำหรับวันพิธีจริง</li>
-              <li>นำ QR Code ไปแสดงหน้างาน</li>
-            </ol>
+          <h2 className="text-xl font-semibold text-green-800 text-center mb-4">
+            ขั้นตอนการลงทะเบียนรับปริญญา
+          </h2>
+          <div className="space-y-3 text-gray-800">
+            <p>
+              ขอแสดงความยินดีกับบัณฑิตใหม่ทุกท่าน มหาวิทยาลัยราชภัฏมหาสารคาม ได้ใช้ระบบลงทะเบียนบัณฑิต
+              เพื่อเข้ารับพระราชทานปริญญาบัตรในการเข้าร่วมพิธีฯ โดยมีวัตถุประสงค์เพื่อจัดระเบียบการรับสมัคร
+              ตรวจสอบสถานะ และความถูกต้องของข้อมูลบัณฑิต
+              โดยระบบจะเปิดให้ลงทะเบียนระหว่างวันที่ 15 มกราคม - 5 มีนาคม 2561
+              โดยชำระเงินค่าลงทะเบียนเรียบร้อยแล้วเท่านั้นจึงถือว่าสมัครสำเร็จ
+            </p>
+            <div className="bg-blue-100 border-l-4 border-blue-500 p-3 rounded">
+              <strong className="block text-blue-800 mb-1">ประกาศ</strong>
+              <p>
+                ** ประกาศมหาวิทยาลัยราชภัฏมหาสารคาม เรื่อง กำหนดอัตราค่าลงทะเบียนเข้ารับพระราชทานปริญญาบัตร 
+                <a href="#" className="text-blue-700 underline ml-1" target="_blank">
+                  มหาวิทยาลัยราชภัฏมหาสารคาม พ.ศ.2561
+                </a>
+              </p>
+            </div>
+            <div className="bg-yellow-100 border-l-4 border-yellow-500 p-3 rounded">
+              <strong className="block text-yellow-800 mb-1">คำชี้แจง *</strong>
+              <ul className="list-disc list-inside text-sm space-y-1">
+                <li>บัณฑิตจะต้องลงชื่อแบบสำรวจการเข้าร่วมพิธีฯ พร้อมชำระเงินเพื่อเข้ารับพระราชทานปริญญาบัตรได้</li>
+                <li>บัณฑิตต้องสามารถตรวจสอบสถานะการชำระเงินและลงทะเบียนได้สำเร็จ ภายในระยะเวลา 7 วันทำการ</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Panel 3: ผลการค้นหา */}
-      <AnimatePresence>
-        {isSearched && results.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.3 }}
-            className="max-w-7xl mx-auto mt-10 px-4"
-          >
-            <div className="bg-white p-6 rounded shadow-md text-black">
-              <h3 className="text-xl font-bold text-green-800 text-center mb-4">
-                ผลการค้นหา
-              </h3>
-              <div className="overflow-x-auto">
-                <table className="w-full table-auto bg-white text-black rounded-lg overflow-hidden shadow-md">
-                  <thead className="bg-green-800 text-white">
-                    <tr>
-                      <th className="py-2 px-4">รหัสนักศึกษา</th>
-                      <th className="py-2 px-4">ชื่อ - สกุล</th>
-                      <th className="py-2 px-4">คณะ</th>
-                      <th className="py-2 px-4">สาขา</th>
-                      <th className="py-2 px-4 text-center">ดำเนินการ</th>
+      {/* Search Result Panel (แสดงผลลัพธ์สำหรับจอใหญ่) */}
+      {isSearched && (
+        <div className="max-w-7xl mx-auto mt-10 px-4 hidden lg:block">
+          <div className="bg-white p-6 rounded shadow-md text-black">
+            <h3 className="text-xl font-bold text-green-800 text-center mb-4">
+              ผลการค้นหา
+            </h3>
+            {results.length > 0 ? (
+              <table className="w-full table-auto bg-white text-black rounded-lg overflow-hidden shadow-md">
+                <thead className="bg-green-800 text-white">
+                  <tr>
+                    <th className="py-2 px-4 text-center">รหัสนักศึกษา</th>
+                    <th className="py-2 px-4 text-center">ชื่อ - สกุล</th>
+                    <th className="py-2 px-4 text-center">คณะ</th>
+                    <th className="py-2 px-4 text-center">สาขา</th>
+                    <th className="py-2 px-4 text-center">ดำเนินการ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {results.map((student) => (
+                    <tr key={student.id} className="border-b hover:bg-gray-100 transition">
+                      <td className="py-2 px-4 text-center">{student.std_code}</td>
+                      <td className="py-2 px-4 text-center">{student.name_th}</td>
+                      <td className="py-2 px-4 text-center">{student.faculty}</td>
+                      <td className="py-2 px-4 text-center">{student.program}</td>
+                      <td className="py-2 px-4 text-center">
+                        <button
+                          onClick={() => router.push(`/detail?std_code=${student.std_code}`)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded"
+                        >
+                          รายละเอียด
+                        </button>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {results.map((grad, index) => (
-                      <tr
-                        key={index}
-                        className="border-b hover:bg-gray-100 transition"
-                      >
-                        <td className="py-2 px-4">{grad.studentId}</td>
-                        <td className="py-2 px-4">{grad.name}</td>
-                        <td className="py-2 px-4">{grad.faculty}</td>
-                        <td className="py-2 px-4">{grad.major}</td>
-                        <td className="py-2 px-4 text-center">
-                          <a
-                            href={`/detail/${grad.studentId}`}
-                            className="inline-block bg-blue-600 text-white text-sm font-medium px-3 py-1 rounded-md hover:bg-blue-700 transition duration-200"
-                          >
-                            รายละเอียด
-                          </a>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-center text-red-600">ไม่พบข้อมูลบัณฑิต</p>
+            )}
+          </div>
+        </div>
+      )}
+    </main>
   );
 }

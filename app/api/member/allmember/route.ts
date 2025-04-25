@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import pool from '../../../../lib/db'; // นำเข้าจาก db.js
+import pool from "@/lib/db"; // ✅ import มาใช้ตรง ๆ
 
 // Endpoint สำหรับดึงสมาชิกทั้งหมด
 export async function GET(req) {

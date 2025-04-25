@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import pool from '../../../lib/db'; // นำเข้าจาก db.js
 import bcrypt from 'bcrypt'; // นำเข้า bcrypt สำหรับการเข้ารหัสรหัสผ่าน
+import pool from "@/lib/db"; // ✅ import มาใช้ตรง ๆ
 
 // ฟังก์ชันสำหรับการสร้างสมาชิกใหม่
 export async function POST(req) {

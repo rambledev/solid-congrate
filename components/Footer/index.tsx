@@ -71,8 +71,26 @@ const Footer = () => {
               className="animate_top"
             >
               <p>
-                &copy; {new Date().getFullYear()} Solid. All rights reserved CC-RMU
-              </p>
+  &copy; {new Date().getFullYear()} All rights reserved{" "}
+  <a
+    href="http://cc.rmu.ac.th/"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-blue-300 hover:underline"
+  >
+    CC-RMU
+  </a>{" "}
+  dev by{" "}
+  <a
+    href="https://line.me/R/ti/p/~ramblesoft"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-blue-300 hover:underline"
+  >
+    Mr.Techo Khet-anan
+  </a>
+</p>
+
             </motion.div>
 
             <motion.div

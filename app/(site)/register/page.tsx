@@ -1,246 +1,186 @@
 "use client";
-import { motion } from "framer-motion";
-import Image from "next/image";
-import React, { useState } from "react";
-import axios from "axios";
-import HorizontalTimelineCustom from 'components/HorizontalTimelineCustom';
 
-const Register = () => {
-  const [formData, setFormData] = useState({
-    studentId: "",
-    fullName: "",
-    faculty: "",
-    major: "",
+import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
+import Banner from "@/components/Banner";
+
+export default function RegisterPage() {
+  const searchParams = useSearchParams();
+  const std_code = searchParams.get("std_code");
+  const router = useRouter();
+
+  const [form, setForm] = useState({
+    std_code: std_code || "",
+    id_card: "",
+    house_no: "",
+    moo: "",
+    village: "",
+    road: "",
+    soi: "",
+    subdistrict: "",
+    district: "",
+    province: "",
+    zipcode: "",
     phone: "",
-    password: "",
-    graduation: "",
-    rentGown: "",
-    gownSize: "",
-    pin: "ไม่รับ",
-    photo: "ไม่รับ",
+    gender: "",
+    academic_year: "",
+    cost_option: "",
+    price: "",
+    consent: false,
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  useEffect(() => {
+    const fetchRegist = async () => {
+      if (!std_code) return;
 
-  const validateForm = () => {
-    if (formData.password.length < 6 || formData.password.length > 10) {
-      alert("รหัสผ่านต้องมีความยาวระหว่าง 6 ถึง 10 ตัวอักษร");
-      return false;
+      try {
+        const res = await fetch(`/api/regist?std_code=${std_code}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.success) {
+          setForm({
+            ...data.data,
+            consent: data.data.consent_given ?? false, // ✅ ทำให้ checkbox ติ๊กถูกอัตโนมัติ
+          });
+          Swal.fire("แจ้งเตือน", "คุณได้ทำการลงทะเบียนแล้ว", "info");
+        }
+      } catch (error) {
+        console.error("fetch error", error);
+      }
+    };
+    fetchRegist();
+  }, [std_code]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    let updatedForm = { ...form, [name]: value };
+
+    if (name === "cost_option") {
+      let price = "";
+      if (value === "1") price = "2500";
+      else if (value === "2") price = "3700";
+      else if (value === "3") price = "4500";
+      updatedForm.price = price;
     }
-    if (formData.graduation === "") {
-      alert("กรุณาเลือกความต้องการเข้ารับพระราชทานปริญญาบัตร");
-      return false;
-    }
-    return true;
+
+    setForm(updatedForm);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("form submission", form);
 
-    if (!validateForm()) return;
-
-    try {
-      const checkResponse = await axios.post("/api/checkMember", {
-        studentId: formData.studentId,
-        fullName: formData.fullName,
-      });
-
-      if (checkResponse.data.exists) {
-        alert("ข้อมูลนี้เคยทำการลงทะเบียนไปแล้ว");
+    for (const key in form) {
+      if (!form[key as keyof typeof form]) {
+        Swal.fire("แจ้งเตือน", "กรุณากรอกข้อมูลให้ครบทุกช่อง", "warning");
         return;
       }
+    }
 
-      const response = await axios.post("/api/member", formData);
-      alert(response.data.message);
-
-      // Reset form data
-      setFormData({
-        studentId: "",
-        fullName: "",
-        faculty: "",
-        major: "",
-        phone: "",
-        password: "",
-        graduation: "",
-        rentGown: "",
-        gownSize: "",
-        pin: "ไม่รับ",
-        photo: "ไม่รับ",
+    try {
+      const res = await fetch("/api/regist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
       });
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("เกิดข้อผิดพลาดในการส่งข้อมูล");
+
+      const data = await res.json();
+      if (data.success) {
+        Swal.fire("สำเร็จ", data.message, "success");
+        router.push(`/detail?std_code=${std_code}`);
+      } else {
+        Swal.fire("เกิดข้อผิดพลาด", data.message, "error");
+      }
+    } catch (err) {
+      console.error("submit error", err);
+      Swal.fire("ผิดพลาด", "ไม่สามารถบันทึกข้อมูลได้", "error");
     }
   };
 
   return (
-    <section id="support" className="px-4 md:px-8 2xl:px-0">
-      <div className="relative mx-auto max-w-c-1390 px-7.5 pt-10 lg:px-15 lg:pt-15 xl:px-20 xl:pt-20">
-        <div className="absolute left-0 top-0 -z-1 h-2/3 w-full rounded-lg bg-gradient-to-t from-transparent to-[#dee7ff47] dark:bg-gradient-to-t dark:to-[#252A42]"></div>
-        <div className="absolute bottom-[-255px] left-0 -z-1 h-full w-full">
-          <Image
-            src="./images/shape/shape-dotted-light.svg"
-            alt="Dotted"
-            className="dark:hidden"
-            fill
-          />
-          <Image
-            src="./images/shape/shape-dotted-dark.svg"
-            alt="Dotted"
-            className="hidden dark:block"
-            fill
-          />
-        </div>
+    <main className="min-h-screen px-6 py-10 bg-green-900 text-gray-800">
+      <Banner />
+      <div className="max-w-4xl mx-auto bg-white p-6 rounded shadow">
+      <button
+  onClick={() => router.push(`/detail?std_code=${form.std_code}`)}
+  className="mb-4 text-blue-700 hover:underline"
+>
+  ← กลับหน้ารายละเอียด
+</button>
 
-        <div className="flex flex-col gap-8">
-          <motion.div
-            variants={{
-              hidden: { opacity: 0, y: -20 },
-              visible: { opacity: 1, y: 0 },
-            }}
-            initial="hidden"
-            whileInView="visible"
-            transition={{ duration: 1, delay: 0.1 }}
-            viewport={{ once: true }}
-            className="animate_top w-full rounded-lg bg-white p-7.5 shadow-solid-8 dark:border dark:border-strokedark dark:bg-black xl:p-15"
-          >
-            <HorizontalTimelineCustom />
 
-            <h2 className="mb-15 text-3xl font-semibold text-black dark:text-white xl:text-sectiontitle2">
-              แบบฟอร์มลงทะเบียน
-            </h2>
+        <h1 className="text-2xl font-bold text-center mb-6">แบบฟอร์มลงทะเบียน</h1>
 
-            <form onSubmit={handleSubmit}>
-              {/* Student ID and Full Name Fields */}
-              <div className="mb-7.5 flex flex-col gap-7.5 lg:flex-row lg:justify-between lg:gap-14">
-                <InputField name="studentId" placeholder="รหัสนักศึกษา" value={formData.studentId} onChange={handleChange} />
-                <InputField name="fullName" placeholder="ชื่อ-สกุล" value={formData.fullName} onChange={handleChange} />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label>รหัสนักศึกษา</label><input name="std_code" value={form.std_code} readOnly className="w-full bg-gray-100 px-3 py-2 border rounded" /></div>
+            <div><label>เลขบัตรประชาชน</label><input name="id_card" value={form.id_card} onChange={handleChange} className="w-full px-3 py-2 border rounded" /></div>
+            <div><label>บ้านเลขที่</label><input name="house_no" value={form.house_no} onChange={handleChange} className="w-full px-3 py-2 border rounded" /></div>
+            <div><label>หมู่</label><input name="moo" value={form.moo} onChange={handleChange} className="w-full px-3 py-2 border rounded" /></div>
+            <div><label>หมู่บ้าน</label><input name="village" value={form.village} onChange={handleChange} className="w-full px-3 py-2 border rounded" /></div>
+            <div><label>ถนน</label><input name="road" value={form.road} onChange={handleChange} className="w-full px-3 py-2 border rounded" /></div>
+            <div><label>ซอย</label><input name="soi" value={form.soi} onChange={handleChange} className="w-full px-3 py-2 border rounded" /></div>
+            <div><label>ตำบล/แขวง</label><input name="subdistrict" value={form.subdistrict} onChange={handleChange} className="w-full px-3 py-2 border rounded" /></div>
+            <div><label>อำเภอ/เขต</label><input name="district" value={form.district} onChange={handleChange} className="w-full px-3 py-2 border rounded" /></div>
+            <div>
+              <label>จังหวัด</label>
+              <select name="province" value={form.province} onChange={handleChange} className="w-full px-3 py-2 border rounded">
+                <option value="">-- เลือกจังหวัด --</option>
+                {[
+                  "กรุงเทพมหานคร", "เชียงใหม่", "ขอนแก่น", "นครราชสีมา", "มหาสารคาม", "ชลบุรี", "ระยอง", "อุดรธานี", "สุรินทร์", "บุรีรัมย์"
+                ].map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+            <div><label>รหัสไปรษณีย์</label><input name="zipcode" value={form.zipcode} onChange={handleChange} className="w-full px-3 py-2 border rounded" /></div>
+            <div><label>เบอร์โทรศัพท์</label><input name="phone" value={form.phone} onChange={handleChange} className="w-full px-3 py-2 border rounded" /></div>
+            <div>
+              <label>เพศ</label>
+              <div className="flex gap-4">
+                <label><input type="radio" name="gender" value="ชาย" checked={form.gender === "ชาย"} onChange={handleChange} /> ชาย</label>
+                <label><input type="radio" name="gender" value="หญิง" checked={form.gender === "หญิง"} onChange={handleChange} /> หญิง</label>
               </div>
+            </div>
+            <div><label>ปีที่สำเร็จการศึกษา</label><input name="academic_year" value={form.academic_year} onChange={handleChange} className="w-full px-3 py-2 border rounded" /></div>
+          
+          </div>
 
-              {/* Faculty and Major Fields */}
-              <div className="mb-12.5 flex flex-col gap-7.5 lg:flex-row lg:justify-between lg:gap-14">
-                <InputField name="faculty" placeholder="คณะ" value={formData.faculty} onChange={handleChange} />
-                <InputField name="major" placeholder="สาขาวิชา" value={formData.major} onChange={handleChange} />
-              </div>
+          <div>
+            <label className="block font-medium mb-1 mt-4">ค่าใช้จ่าย</label>
+            <div className="space-y-2">
+              <label className="block"><input type="radio" name="cost_option" value="1" checked={form.cost_option === "1"} onChange={handleChange} /> ลงทะเบียนเข้ารับปริญญาบัตร (2,500 บาท)</label>
+              <label className="block"><input type="radio" name="cost_option" value="2" checked={form.cost_option === "2"} onChange={handleChange} /> ลงทะเบียนเข้ารับปริญญาบัตร + เช่าชุดครุยวิทยฐานะ (3,700 บาท — คืน 1,000)</label>
+              <label className="block"><input type="radio" name="cost_option" value="3" checked={form.cost_option === "3"} onChange={handleChange} /> ลงทะเบียนเข้ารับปริญญาบัตร + ตัดชุดครุยวิทยฐานะ (4,500 บาท)</label>
+            </div>
+          </div>
 
-              {/* Phone and Password Fields */}
-              <InputField name="phone" placeholder="เบอร์โทร" value={formData.phone} onChange={handleChange} />
-              <InputField name="password" type="password" placeholder="รหัสผ่าน" value={formData.password} onChange={handleChange} />
+          {form.price && <p className="text-center text-lg text-blue-600 font-semibold">ยอดชำระ: {parseInt(form.price).toLocaleString()} บาท</p>}
 
-              <hr />
-
-              <h3 className="mb-5 text-2xl font-semibold text-black dark:text-white">แบบสำรวจ</h3>
-
-              {/* Graduation Options */}
-              <div className="mb-7.5">
-                <label className="block mb-2 text-lg font-medium text-black dark:text-white">1. ความต้องการเข้ารับพระราชทานปริญญาบัตร</label>
-                <div className="flex gap-4">
-                  <RadioInput name="graduation" value="เข้ารับ" checked={formData.graduation === "เข้ารับ"} onChange={handleChange} label="เข้ารับ" />
-                  <RadioInput name="graduation" value="ไม่เข้ารับ" checked={formData.graduation === "ไม่เข้ารับ"} onChange={handleChange} label="ไม่เข้ารับ" />
-                </div>
-              </div>
-
-              {/* Rent Gown Options */}
-              <div className="mb-7.5">
-                <label className="block mb-2 text-lg font-medium text-black dark:text-white">2. เช่าชุดครุย</label>
-                <div className="flex gap-4">
-                  <RadioInput name="rentGown" value="ไม่เช่า" checked={formData.rentGown === "ไม่เช่า"} onChange={handleChange} label="ไม่เช่า" />
-                  <RadioInput name="rentGown" value="เช่า" checked={formData.rentGown === "เช่า"} onChange={handleChange} label="เช่า" />
-                </div>
-              </div>
-
-              {/* Gown Size and Options if renting */}
-              {formData.rentGown === "เช่า" && (
-                <>
-                  <div className="mb-7.5">
-                    <label className="block mb-2 text-lg font-medium text-black dark:text-white">2.1 ขนาดชุดครุย</label>
-                    <select
-                      name="gownSize"
-                      onChange={handleChange}
-                      value={formData.gownSize}
-                      className="w-full border-b border-stroke bg-transparent pb-3.5 focus:border-waterloo focus:placeholder:text-black focus-visible:outline-none dark:border-strokedark dark:focus:border-manatee dark:focus:placeholder:text-white"
-                    >
-                      <option value="">เลือกขนาด</option>
-                      <option value="M">M</option>
-                      <option value="L">L</option>
-                      <option value="XL">XL</option>
-                      <option value="XXL">XXL</option>
-                    </select>
-                  </div>
-
-                  <OptionSection name="pin" label="2.2 เข็ม" options={["รับ", "ไม่รับ"]} onChange={handleChange} />
-                  <OptionSection name="photo" label="2.3 ภาพถ่าย" options={["รับภาพรวม", "ไม่รับ"]} onChange={handleChange} />
-                </>
-              )}
-
-              <div className="flex flex-wrap gap-4 xl:justify-between">
-                <button
-                  type="submit"
-                  aria-label="submit form"
-                  className="inline-flex items-center gap-2.5 rounded-full bg-black px-6 py-3 font-medium text-white duration-300 ease-in-out hover:bg-blackho dark:bg-btndark"
-                >
-                  ส่งข้อมูล
-                  <svg
-                    className="fill-white"
-                    width="14"
-                    height="14"
-                    viewBox="0 0 14 14"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M10.4767 6.16664L6.00668 1.69664L7.18501 0.518311L13.6667 6.99998L7.18501 13.4816L6.00668 12.3033L10.4767 7.83331H0.333344V6.16664H10.4767Z"
-                      fill=""
-                    />
-                  </svg>
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// Helper for rendering input fields
-const InputField = ({ name, type = "text", placeholder, value, onChange }) => (
+          <div className="flex items-start gap-2 mt-6">
   <input
-    name={name}
-    type={type}
-    placeholder={placeholder}
-    className="w-full border-b border-stroke bg-transparent pb-3.5 focus:border-waterloo focus:placeholder:text-black focus-visible:outline-none dark:border-strokedark dark:focus:border-manatee dark:focus:placeholder:text-white lg:w-1/2"
-    onChange={onChange}
-    value={value}
+    type="checkbox"
+    id="consent"
+    name="consent"
+    required
+    className="mt-1"
+    checked={form.consent}
+    onChange={(e) =>
+      setForm({ ...form, consent: e.target.checked })
+    }
   />
-);
-
-// Helper for rendering radio inputs
-const RadioInput = ({ name, value, checked, onChange, label }) => (
-  <label className="flex items-center">
-    <input
-      type="radio"
-      name={name}
-      value={value}
-      onChange={onChange}
-      checked={checked}
-    />
-    <span className="ml-2">{label}</span>
+  <label htmlFor="consent" className="text-sm leading-tight">
+    ข้าพเจ้ายินยอมให้มีการใช้ข้อมูลส่วนบุคคลและเปิดเผยบางส่วนตามที่ระบุใน
+    <a href="/privacy-policy" className="text-blue-600 underline ml-1">นโยบายความเป็นส่วนตัว</a>
   </label>
-);
+</div>
 
-// Helper for rendering option sections
-const OptionSection = ({ name, label, options, onChange }) => (
-  <div className="mb-7.5">
-    <label className="block mb-2 text-lg font-medium text-black dark:text-white">{label}</label>
-    <div className="flex gap-4">
-      {options.map(option => (
-        <RadioInput key={option} name={name} value={option} onChange={onChange} label={option} />
-      ))}
-    </div>
-  </div>
-);
 
-export default Register;
+
+          <div className="text-center mt-6">
+            <button type="submit" className="bg-green-700 hover:bg-green-800 text-white font-semibold px-6 py-2 rounded">บันทึกข้อมูล</button>
+          </div>
+        </form>
+      </div>
+    </main>
+  );
+}

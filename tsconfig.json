@@ -25,10 +25,8 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./*"
-      ]
-    },
+  "@/*": ["./*"]
+},
     "strictNullChecks": true,
     "target": "ES2017"
   },
