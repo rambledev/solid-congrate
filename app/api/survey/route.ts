@@ -10,8 +10,10 @@ export async function POST(req: Request) {
     const {
       std_code, name, birth_day, birth_month, birth_year,
       address, subdistrict, district, province, zipcode,
-      phone, email, work_status, other_status
+      phone, email, work_status, other_status,
+      workplace, work_address, position, salary
     } = data;
+    
 
     const client = await pool.connect();
 
@@ -20,14 +22,18 @@ export async function POST(req: Request) {
       `INSERT INTO tb_survey (
         std_code, name, birth_day, birth_month, birth_year,
         address, subdistrict, district, province, zipcode,
-        phone, email, work_status, other_status
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+        phone, email, work_status, other_status,
+        workplace, work_address, position, salary
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,
+                $12,$13,$14,$15,$16,$17,$18)`,
       [
         std_code, name, birth_day, birth_month, birth_year,
         address, subdistrict, district, province, zipcode,
-        phone, email, work_status, other_status
+        phone, email, work_status, other_status,
+        workplace, work_address, position, salary
       ]
-    );
+    )
+    ;
 
     // 2. Update work_status ใน tb_student
     await client.query(

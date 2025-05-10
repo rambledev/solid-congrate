@@ -5,14 +5,13 @@ module.exports = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
-
-    // Or if using `src` directory:
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   darkMode: "class",
   theme: {
     fontFamily: {
       inter: ["Inter", "sans-serif"],
+      sarabun: ["THSarabunNew", "sans-serif"], // ✅ เพิ่มฟอนต์ไทยสารบัญ
     },
     extend: {
       colors: {
@@ -146,7 +145,6 @@ module.exports = {
         line3: "line 9s linear infinite",
         'fade-in': 'fadeIn 0.3s ease-out forwards',
       },
-      
     },
   },
   plugins: [],

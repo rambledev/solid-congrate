@@ -66,13 +66,13 @@ export default function Home() {
               onChange={(e) => setName(e.target.value)}
               className="w-full p-2 border rounded"
             />
-            <input
+            {/* <input
               type="text"
               placeholder="ปีการศึกษาที่จบ (เช่น 2566)"
               value={gradYear}
               onChange={(e) => setGradYear(e.target.value)}
               className="w-full p-2 border rounded"
-            />
+            /> */}
             <button
               type="submit"
               className="w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-2 rounded"

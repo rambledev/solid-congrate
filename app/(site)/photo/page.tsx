@@ -20,14 +20,33 @@ export default function PhotoPage() {
 
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
 
-  const onCropComplete = useCallback((_, croppedPixels) => {
-    setCroppedAreaPixels(croppedPixels);
-  }, []);
+  const onCropComplete = useCallback(
+    async (_, croppedPixels) => {
+      setCroppedAreaPixels(croppedPixels);
+  
+      // generate real-time preview
+      if (imageSrc) {
+        const cropped = await getCroppedImg(imageSrc, croppedPixels, 600, 800);
+        setCroppedImage(cropped);
+      }
+    },
+    [imageSrc]
+  );
+  
 
   const showCroppedImage = useCallback(async () => {
+    if (!croppedAreaPixels) {
+      alert("ยังไม่ได้ครอปภาพ");
+      return;
+    }
+
+    if (croppedAreaPixels.width < 600 || croppedAreaPixels.height < 800) {
+      alert("ขนาดส่วนที่ครอปเล็กเกินไป อาจทำให้ภาพเบลอ");
+    }
+
     try {
       setUploading(true);
-      const cropped = await getCroppedImg(imageSrc!, croppedAreaPixels, 600);
+      const cropped = await getCroppedImg(imageSrc!, croppedAreaPixels, 600, 800);
       setCroppedImage(cropped);
 
       const blob = await (await fetch(cropped)).blob();
@@ -73,8 +92,7 @@ export default function PhotoPage() {
 
   useEffect(() => {
     if (std_code) {
-      // ตรวจสอบว่ามีรูปภาพเดิมไหม
-      fetch(`/uploads/${std_code}.jpg`).then(res => {
+      fetch(`/uploads/${std_code}.jpg`).then((res) => {
         if (res.ok) setExistingImageUrl(`/uploads/${std_code}.jpg`);
       });
     }
@@ -83,7 +101,6 @@ export default function PhotoPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-900 to-green-700 text-white px-4 py-10">
       <div className="max-w-lg mx-auto bg-white text-black p-6 rounded shadow relative">
-        {/* ปุ่มกลับภายใน Panel */}
         <div className="mb-4">
           <button
             onClick={() => router.push(`/detail?std_code=${std_code}`)}
@@ -93,33 +110,40 @@ export default function PhotoPage() {
           </button>
         </div>
 
-        <h1 className="text-2xl font-bold mb-2 text-green-800 text-center mt-2">เลือกรูปภาพนักศึกษา</h1>
+        <h1 className="text-2xl font-bold mb-2 text-green-800 text-center mt-2">
+          เลือกรูปภาพนักศึกษา
+        </h1>
         <p className="text-red-600 text-sm mb-4 text-center">
           * ต้องเป็นภาพถ่ายหน้าตรงสวมชุดครุยวิทยฐานะที่ถูกต้องตามระเบียบมหาวิทยาลัยราชภัฏมหาสารคาม
         </p>
 
-        {/* แสดงรูปภาพเดิม */}
         {existingImageUrl && (
           <div className="mb-4 text-center">
             <p className="text-sm text-gray-700 mb-1">รูปภาพเดิมที่มีอยู่:</p>
             <img
               src={existingImageUrl}
               alt="รูปภาพเดิม"
-              className="w-[200px] h-[200px] object-cover border border-black mx-auto"
+              onError={(e) => (e.currentTarget.src = "/blank.png")}
+              className="w-[150px] h-[200px] object-cover border border-black mx-auto rounded shadow"
             />
           </div>
         )}
+
+<p className="text-yellow-700 bg-yellow-100 border border-yellow-300 rounded px-3 py-2 text-sm mb-4">
+  ⚠ กรุณาเลือกรูปที่มีขนาดอย่างน้อย <strong>900 × 1200 พิกเซล</strong> 
+  เพื่อให้สามารถครอปได้อย่างชัดเจน และได้ภาพผลลัพธ์ 600 × 800 พิกเซลที่มีคุณภาพ
+</p>
 
         {!imageSrc ? (
           <input type="file" accept="image/*" onChange={handleImageChange} className="mb-6 w-full" />
         ) : (
           <>
-            <div className="relative w-full h-[350px] bg-gray-100 mb-4">
+            <div className="relative w-full h-[450px] bg-gray-100 mb-4">
               <Cropper
                 image={imageSrc}
                 crop={crop}
                 zoom={zoom}
-                aspect={1}
+                aspect={3 / 4}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onCropComplete={onCropComplete}
@@ -157,12 +181,15 @@ export default function PhotoPage() {
 
             {croppedImage && (
               <div className="mt-4">
-                <p className="mb-2 text-center">รูปหลัง Crop (600x600):</p>
-                <img
-                  src={croppedImage}
-                  alt="Cropped"
-                  className="w-[300px] h-[300px] object-cover border border-black shadow mx-auto"
-                />
+                <p className="mb-2 text-center">รูปหลัง Crop (600×800):</p>
+                <div className="w-[150px] h-[200px] mx-auto border border-black rounded shadow overflow-hidden">
+                  <img
+                    src={croppedImage}
+                    alt="Cropped"
+                    onError={(e) => (e.currentTarget.src = "/blank.png")}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               </div>
             )}
           </>

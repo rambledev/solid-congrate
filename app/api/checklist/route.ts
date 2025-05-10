@@ -15,7 +15,7 @@ export async function GET(req) {
         const date = url.searchParams.get("date");
         // ดึงข้อมูลตามวันที่
         const result = await pool.query(
-          "SELECT a.*,b.* FROM tb_checklist a left join tb_member b on a.std_code = b.std_code WHERE a.timestamp::date = $1",
+          "SELECT a.*,b.* FROM tb_checklist a left join tb_student b on a.std_code = b.std_code WHERE a.timestamp::date = $1",
           [date]
         );
 
@@ -25,7 +25,7 @@ export async function GET(req) {
         }, { status: 200 });
       } else {
         // หากไม่มี date ให้ดึงข้อมูลทั้งหมด
-        const result = await pool.query("SELECT a.*,b.* FROM tb_checklist a left join tb_member b on a.std_code = b.std_code");
+        const result = await pool.query("SELECT a.*,b.* FROM tb_checklist a left join tb_student b on a.std_code = b.std_code");
 
         return NextResponse.json({ 
           message: "ดึงข้อมูลสำเร็จ", 

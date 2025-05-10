@@ -4,7 +4,42 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 
+type ThaiAddress = {
+  district: string;       // ตำบล
+  amphoe: string;         // อำเภอ
+  province: string;       // จังหวัด
+  zipcode: number;
+  district_code: number;
+  amphoe_code: number;
+  province_code: number;
+};
+
+
 export default function SurveyPage() {
+
+  const [addressList, setAddressList] = useState<ThaiAddress[]>([]);
+
+
+useEffect(() => {
+  const fetchAddressData = async () => {
+    try {
+      const res = await fetch("/address_api.json");
+      const data = await res.json();
+      setAddressList(data);
+    } catch (error) {
+      console.error("โหลดข้อมูล address_api.json ไม่สำเร็จ:", error);
+    }
+  };
+
+  fetchAddressData();
+}, []);
+
+useEffect(() => {
+  console.log("รายการตำบลที่โหลดได้:", addressList);
+}, [addressList]);
+
+
+
   const searchParams = useSearchParams();
   const std_code = searchParams.get("std_code");
   const router = useRouter();
@@ -24,11 +59,37 @@ export default function SurveyPage() {
     email: "",
     work_status: "",
     other_status: "",
+    workplace: "",
+    work_address: "",
+    position: "",
+    salary: "", // ไม่บังคับ
   });
+  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    const updatedForm = { ...formData, [name]: value };
+  
+    // ถ้ากรอกหรือเลือกตำบล ให้ค้นหาและเติมอำเภอ จังหวัด รหัสไปรษณีย์
+    if (name === "subdistrict") {
+      const match = addressList.find(
+        (item) => item.district.trim().toLowerCase() === value.trim().toLowerCase()
+      );
+  
+      if (match) {
+        updatedForm.district = match.amphoe;
+        updatedForm.province = match.province;
+        updatedForm.zipcode = match.zipcode.toString();
+      } else {
+        updatedForm.district = "";
+        updatedForm.province = "";
+        updatedForm.zipcode = "";
+      }
+    }
+  
+    setFormData(updatedForm);
   };
+  
 
   useEffect(() => {
     const fetchStudent = async () => {
@@ -104,65 +165,163 @@ export default function SurveyPage() {
         <h1 className="text-2xl font-bold text-center text-green-800 mb-4">แบบสอบถามการมีงานทำ</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div><strong>รหัสนักศึกษา:</strong> {formData.std_code}</div>
+  <div><strong>รหัสนักศึกษา:</strong> {formData.std_code}</div>
 
-          <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="ชื่อ - สกุล" className="w-full p-2 border rounded" />
+  <div>
+    <label htmlFor="name" className="block font-medium mb-1">ชื่อ - สกุล <span className="text-red-500">*</span></label>
+    <input id="name" name="name" value={formData.name} onChange={handleChange} placeholder="ชื่อ - สกุล" className="w-full p-2 border rounded" />
+  </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <input name="birth_day" value={formData.birth_day} onChange={handleChange} placeholder="วัน" className="p-2 border rounded" />
-            <input name="birth_month" value={formData.birth_month} onChange={handleChange} placeholder="เดือน" className="p-2 border rounded" />
-            <input name="birth_year" value={formData.birth_year} onChange={handleChange} placeholder="ปี ค.ศ." className="p-2 border rounded" />
-          </div>
+  <div>
+  <div>
+  <label className="block font-medium mb-2">วันเกิด</label>
+  <div className="grid grid-cols-3 gap-4">
+    <div>
+      <label htmlFor="birth_day" className="block text-sm mb-1">วัน <span className="text-red-500">*</span></label>
+      <input id="birth_day" name="birth_day" value={formData.birth_day} onChange={handleChange} placeholder="วัน" className="w-full p-2 border rounded" />
+    </div>
+    <div>
+      <label htmlFor="birth_month" className="block text-sm mb-1">เดือน <span className="text-red-500">*</span></label>
+      <input id="birth_month" name="birth_month" value={formData.birth_month} onChange={handleChange} placeholder="เดือน" className="w-full p-2 border rounded" />
+    </div>
+    <div>
+      <label htmlFor="birth_year" className="block text-sm mb-1">ปี (ค.ศ.) <span className="text-red-500">*</span></label>
+      <input id="birth_year" name="birth_year" value={formData.birth_year} onChange={handleChange} placeholder="ปี ค.ศ." className="w-full p-2 border rounded" />
+    </div>
+  </div>
+</div>
 
-          <input name="address" value={formData.address} onChange={handleChange} placeholder="ที่อยู่" className="w-full p-2 border rounded" />
-          <div className="grid grid-cols-2 gap-4">
-            <input name="subdistrict" value={formData.subdistrict} onChange={handleChange} placeholder="ตำบล" className="p-2 border rounded" />
-            <input name="district" value={formData.district} onChange={handleChange} placeholder="อำเภอ" className="p-2 border rounded" />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <input name="province" value={formData.province} onChange={handleChange} placeholder="จังหวัด" className="p-2 border rounded" />
-            <input name="zipcode" value={formData.zipcode} onChange={handleChange} placeholder="รหัสไปรษณีย์" className="p-2 border rounded" />
-          </div>
+  </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <input name="phone" value={formData.phone} onChange={handleChange} placeholder="โทรศัพท์" className="p-2 border rounded" />
-            <input name="email" value={formData.email} onChange={handleChange} placeholder="Email" className="p-2 border rounded" />
-          </div>
+  <div>
+    <label htmlFor="address" className="block font-medium mb-1">ที่อยู่<span className="text-red-500">*</span></label>
+    <input id="address" name="address" value={formData.address} onChange={handleChange} placeholder="ที่อยู่" className="w-full p-2 border rounded" />
+  </div>
 
-          <div>
-            <label className="font-medium">สถานภาพการทำงาน</label>
-            <div className="flex flex-col gap-2 mt-2">
-              {["ทำงานแล้ว", "ยังไม่ได้ทำงาน", "ศึกษาต่อ", "อื่น ๆ"].map((status) => (
-                <label key={status}>
-                  <input
-                    type="radio"
-                    name="work_status"
-                    value={status}
-                    checked={formData.work_status === status}
-                    onChange={handleChange}
-                  />{" "}
-                  {status}
-                </label>
-              ))}
-              {formData.work_status === "อื่น ๆ" && (
-                <input
-                  type="text"
-                  name="other_status"
-                  value={formData.other_status}
-                  onChange={handleChange}
-                  placeholder="โปรดระบุ"
-                  className="border p-1 rounded"
-                />
-              )}
-            </div>
-          </div>
+  <div>
+  <label className="block font-medium mb-1">
+    ตำบล / อำเภอ<span className="text-red-500">*</span>
+  </label>
+  <div className="grid grid-cols-2 gap-4">
+    {/* ตำบล */}
+    <input
+      list="subdistricts"
+      id="subdistrict"
+      name="subdistrict"
+      value={formData.subdistrict}
+      onChange={handleChange}
+      placeholder="ตำบล"
+      className="p-2 border rounded"
+    />
+    {/* อำเภอ */}
+    <input
+      id="district"
+      name="district"
+      value={formData.district}
+      onChange={handleChange}
+      placeholder="อำเภอ"
+      className="p-2 border rounded"
+    />
+  </div>
 
-          <div className="text-center mt-6">
-            <button type="submit" className="bg-green-700 hover:bg-green-800 text-white px-6 py-2 rounded">
-              ส่งข้อมูล
-            </button>
-          </div>
-        </form>
+  {/* Datalist ที่แสดงรายการตำบล */}
+  <datalist id="subdistricts">
+    {Array.from(new Set(addressList.map((item) => item.district))).map((district, idx) => (
+      <option key={idx} value={district} />
+    ))}
+  </datalist>
+</div>
+
+
+  <div>
+    <label className="block font-medium mb-1">จังหวัด / รหัสไปรษณีย์<span className="text-red-500">*</span></label>
+    <div className="grid grid-cols-2 gap-4">
+      <input id="province" name="province" value={formData.province} onChange={handleChange} placeholder="จังหวัด" className="p-2 border rounded" />
+      <input id="zipcode" name="zipcode" value={formData.zipcode} onChange={handleChange} placeholder="รหัสไปรษณีย์" className="p-2 border rounded" />
+    </div>
+  </div>
+
+  <div>
+    <label className="block font-medium mb-1">โทรศัพท์ / Email<span className="text-red-500">*</span></label>
+    <div className="grid grid-cols-2 gap-4">
+      <input id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder="โทรศัพท์" className="p-2 border rounded" />
+      <input id="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email" className="p-2 border rounded" />
+    </div>
+  </div>
+
+  <div>
+    <label className="font-medium block mb-2">สถานภาพการทำงาน<span className="text-red-500">*</span></label>
+    <div className="flex flex-col gap-2">
+      {["ทำงานแล้ว", "ยังไม่ได้ทำงาน", "ศึกษาต่อ", "อื่น ๆ"].map((status) => (
+        <label key={status}>
+          <input
+            type="radio"
+            name="work_status"
+            value={status}
+            checked={formData.work_status === status}
+            onChange={handleChange}
+          />{" "}
+          {status}
+        </label>
+      ))}
+      {formData.work_status === "อื่น ๆ" && (
+        <input
+          type="text"
+          name="other_status"
+          value={formData.other_status}
+          onChange={handleChange}
+          placeholder="โปรดระบุ"
+          className="border p-1 rounded"
+        />
+      )}
+    </div>
+  </div>
+  {formData.work_status === "ทำงานแล้ว" && (
+  <div className="space-y-4">
+    <div>
+      <label htmlFor="workplace" className="block font-medium mb-1">สถานที่ทำงาน <span className="text-red-500">*</span></label>
+      <input id="workplace" name="workplace" value={formData.workplace} onChange={handleChange} placeholder="ชื่อสถานที่ทำงาน" className="w-full p-2 border rounded" />
+    </div>
+
+    <label htmlFor="work_address" className="block font-medium mb-1">จังหวัดที่ทำงาน <span className="text-red-500">*</span></label>
+<input
+  list="provinceList"
+  id="work_address"
+  name="work_address"
+  value={formData.work_address}
+  onChange={handleChange}
+  placeholder="จังหวัดที่ทำงาน"
+  className="w-full p-2 border rounded"
+/>
+
+<datalist id="provinceList">
+  {Array.from(new Set(addressList.map((item) => item.province))).map((province, idx) => (
+    <option key={idx} value={province} />
+  ))}
+</datalist>
+
+
+    <div className="grid grid-cols-2 gap-4">
+      <div>
+        <label htmlFor="position" className="block font-medium mb-1">ตำแหน่ง <span className="text-red-500">*</span></label>
+        <input id="position" name="position" value={formData.position} onChange={handleChange} placeholder="ตำแหน่งงาน" className="w-full p-2 border rounded" />
+      </div>
+      <div>
+        <label htmlFor="salary" className="block font-medium mb-1">เงินเดือน (บาท)</label>
+        <input id="salary" name="salary" value={formData.salary} onChange={handleChange} placeholder="ไม่บังคับกรอก" className="w-full p-2 border rounded" />
+      </div>
+    </div>
+  </div>
+)}
+
+
+  <div className="text-center mt-6">
+    <button type="submit" className="bg-green-700 hover:bg-green-800 text-white px-6 py-2 rounded">
+      ส่งข้อมูล
+    </button>
+  </div>
+</form>
+
       </div>
     </main>
   );

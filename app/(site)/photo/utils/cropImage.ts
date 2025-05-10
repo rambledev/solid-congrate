@@ -3,21 +3,23 @@ import { Area } from "react-easy-crop";
 export const getCroppedImg = (
   imageSrc: string,
   pixelCrop: Area,
-  outputSize = 600 // 👉 ค่า default = 600x600 px
+  outputWidth = 600,
+  outputHeight = 800
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.src = imageSrc;
 
     image.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = outputSize;
-      canvas.height = outputSize;
-      const ctx = canvas.getContext("2d");
+      const cropCanvas = document.createElement("canvas");
+      cropCanvas.width = pixelCrop.width;
+      cropCanvas.height = pixelCrop.height;
+      const cropCtx = cropCanvas.getContext("2d");
 
-      if (!ctx) return reject("Canvas context not available");
+      if (!cropCtx) return reject("Canvas context not available");
 
-      ctx.drawImage(
+      // ตัดภาพจาก pixelCrop
+      cropCtx.drawImage(
         image,
         pixelCrop.x,
         pixelCrop.y,
@@ -25,11 +27,31 @@ export const getCroppedImg = (
         pixelCrop.height,
         0,
         0,
-        outputSize,
-        outputSize
+        pixelCrop.width,
+        pixelCrop.height
       );
 
-      resolve(canvas.toDataURL("image/jpeg"));
+      // จากนั้น resize (ถ้าจำเป็น)
+      const finalCanvas = document.createElement("canvas");
+      finalCanvas.width = outputWidth;
+      finalCanvas.height = outputHeight;
+      const finalCtx = finalCanvas.getContext("2d");
+
+      if (!finalCtx) return reject("Final canvas context not available");
+
+      finalCtx.drawImage(
+        cropCanvas,
+        0,
+        0,
+        pixelCrop.width,
+        pixelCrop.height,
+        0,
+        0,
+        outputWidth,
+        outputHeight
+      );
+
+      resolve(finalCanvas.toDataURL("image/jpeg"));
     };
 
     image.onerror = () => reject("Failed to load image");
