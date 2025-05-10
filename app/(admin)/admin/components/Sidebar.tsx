@@ -41,6 +41,12 @@ const reportMenu = [
   { title: 'ข้อมูลการเช็คชื่อ', path: '/admin/reports/checklist', icon: DocumentTextIcon }
 ]
 
+const sortMenu = [
+  { title: 'จัดกลุ่ม', path: '/admin/sort/group', icon: ClipboardDocumentIcon },
+  { title: 'เรียงลำดับ', path: '/admin/sort/order', icon: ClipboardDocumentIcon }
+]
+
+
 export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
   const pathname = usePathname()
 
@@ -95,6 +101,26 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
                 </nav>
               </div>
 
+              {/* Sort */}
+<div className="mt-8">
+  <h4 className="px-3 text-xs font-bold text-gray-300 uppercase tracking-wide">จัดลำดับ</h4>
+  <nav className="mt-3 space-y-2 px-4">
+    {sortMenu.map((item, index) => (
+      <Link
+        key={index}
+        href={item.path}
+        className={`flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 hover:text-black ${
+          pathname === item.path ? 'bg-gray-200 font-semibold text-black' : 'text-white'
+        }`}
+      >
+        <item.icon className="h-5 w-5" />
+        <span>{item.title}</span>
+      </Link>
+    ))}
+  </nav>
+</div>
+
+
               {/* Logout */}
               <div className="mt-8 px-4">
                 <Link
@@ -148,6 +174,26 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
                 ))}
               </nav>
             </div>
+
+            {/* Sort */}
+<div className="mt-8">
+  <h4 className="px-4 text-xs font-bold text-gray-300 uppercase tracking-wide">จัดลำดับ</h4>
+  <nav className="mt-3 space-y-2 px-4">
+    {sortMenu.map((item, index) => (
+      <Link
+        key={index}
+        href={item.path}
+        className={`flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 hover:text-black ${
+          pathname === item.path ? 'bg-gray-200 font-semibold text-black' : 'text-white'
+        }`}
+      >
+        <item.icon className="h-5 w-5" />
+        <span>{item.title}</span>
+      </Link>
+    ))}
+  </nav>
+</div>
+
 
             {/* Logout */}
             <div className="mt-auto mb-6 px-4">

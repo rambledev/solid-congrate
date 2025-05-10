@@ -50,6 +50,7 @@
     "react-hot-toast": "^2.4.1",
     "react-perfect-scrollbar": "^1.5.8",
     "recharts": "^2.15.3",
+    "sass": "^1.87.0",
     "sweetalert2": "^11.19.1",
     "swiper": "^9.3.2",
     "xlsx": "^0.18.5"
