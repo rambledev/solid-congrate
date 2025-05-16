@@ -22,13 +22,15 @@ export async function POST(req: Request) {
       round,
       cost_option,
       price,
+      height,
+      weight,
       consent, // ✅ เพิ่ม field consent
     } = data;
 
     const client = await pool.connect();
 
     const check = await client.query(
-      `SELECT r.*, s.consent_given 
+      `SELECT *
    FROM tb_regist r
    JOIN tb_student s ON r.std_code = s.std_code
    WHERE r.std_code = $1`,
@@ -41,8 +43,8 @@ export async function POST(req: Request) {
           id_card = $1, house_no = $2, moo = $3, village = $4, road = $5, soi = $6,
           subdistrict = $7, district = $8, province = $9, zipcode = $10,
           phone = $11, gender = $12, academic_year = $13, round = $14,
-          cost_option = $15, price = $16
-        WHERE std_code = $17`,
+          cost_option = $15, price = $16 , height = $17 , weight = $18
+        WHERE std_code = $19`,
         [
           id_card,
           house_no,
@@ -60,6 +62,8 @@ export async function POST(req: Request) {
           round,
           cost_option,
           price,
+          height,
+          weight,
           std_code,
         ]
       );
@@ -69,12 +73,12 @@ export async function POST(req: Request) {
           std_code, id_card, house_no, moo, village, road, soi,
           subdistrict, district, province, zipcode,
           phone, gender, academic_year, round,
-          cost_option, price
+          cost_option, price ,height,weight
         ) VALUES (
           $1, $2, $3, $4, $5, $6, $7,
           $8, $9, $10, $11,
           $12, $13, $14, $15,
-          $16, $17
+          $16, $17, $18 ,$19
         )`,
         [
           std_code,
@@ -94,6 +98,8 @@ export async function POST(req: Request) {
           round,
           cost_option,
           price,
+          height,
+          weight
         ]
       );
     }
@@ -101,7 +107,7 @@ export async function POST(req: Request) {
     // ✅ Update regist_status และ consent_given
     await client.query(
       `UPDATE tb_student 
-       SET regist_status = 'ลงทะเบียนแล้ว', 
+       SET regist_status = 'รอชำระค่าลงทะเบียน', 
            consent_given = $2 
        WHERE std_code = $1`,
       [std_code, consent === true || consent === "true"]
@@ -132,7 +138,7 @@ export async function GET(req: Request) {
 
     const client = await pool.connect();
     const result = await client.query(
-      `SELECT r.*, s.consent_given 
+      `SELECT r.*, s.* ,
        FROM tb_regist r
        JOIN tb_student s ON r.std_code = s.std_code
        WHERE r.std_code = $1`,

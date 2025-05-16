@@ -1,165 +1,118 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation"
+import { useEffect, useState } from "react"
+import Swal from "sweetalert2"
 
-const Profile = () => {
-  const router = useRouter();
-  const [userInfo, setUserInfo] = useState({
-    name: "",
-    std_code: "",
-    faculty: "",
-    program: "",
-    phone: "",
-    password: "",
-  });
+export default function ProfilePage() {
+  const searchParams = useSearchParams()
+  const std_code = searchParams.get("std_code")
 
-  const [newPassword, setNewPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [student, setStudent] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
-  const [errorMessagePass, setErrorMessagePass] = useState("");
-  const [successMessagePass, setSuccessMessagePass] = useState("");
-  
+  const fetchStudent = async () => {
+    if (!std_code) return
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/student?std_code=${std_code}`)
+      const json = await res.json()
+      if (json.success) {
+        setStudent(json.data)
+      } else {
+        Swal.fire("ไม่พบข้อมูล", json.message || "เกิดข้อผิดพลาด", "error")
+      }
+    } catch (err) {
+      console.error(err)
+      Swal.fire("เกิดข้อผิดพลาดในการโหลดข้อมูล", "", "error")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
-    // ดึงข้อมูลผู้ใช้จาก sessionStorage
-    const user = JSON.parse(sessionStorage.getItem('user'));
-    if (user) {
-      // สมมติว่า user มีข้อมูลตามที่ระบุไว้
-      setUserInfo({
-        name: user.name || "",
-        std_code: user.std_code || "",
-        faculty: user.faculty || "",
-        program: user.program || "",
-        phone: user.phone || "",
-        password: "", // ไม่ต้องแสดงรหัสผ่านในฟอร์ม
-      });
-    } else {
-      //router.push("/login"); // ถ้าผู้ใช้ไม่ได้ล็อกอิน ให้ส่งไปหน้า login
-    }
-  }, [router]);
+    fetchStudent()
+  }, [std_code])
 
-  const handleProfileSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axios.put('/api/user/update', userInfo);
-      if (response.data.success) {
-        setSuccessMessage("Profile updated successfully!");
-      } else {
-        setErrorMessage(response.data.message || "An error occurred");
-      }
-    } catch (error) {
-      setErrorMessage(error.response ? error.response.data.message : "An error occurred");
-    }
-  };
+  const handleChange = (field: string, value: string) => {
+    setStudent((prev: any) => ({ ...prev, [field]: value }))
+  }
 
-  const handleChangePassword = async (e) => {
-    e.preventDefault();
+  const handleSave = async () => {
+    if (!student?.std_code) return
+    setSaving(true)
     try {
-      const response = await axios.put('/api/user/change-password', { 
-        password: newPassword ,
-        std_code: userInfo.std_code
-      });
-      if (response.data.success) {
-        setSuccessMessagePass("Password changed successfully!");
-        setNewPassword(""); // รีเซ็ตฟิลด์รหัสผ่านใหม่
+      const res = await fetch("/api/student/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(student),
+      })
+      const json = await res.json()
+      if (json.success) {
+        Swal.fire("บันทึกข้อมูลสำเร็จ", "", "success")
       } else {
-        setErrorMessagePass(response.data.message || "An error occurred");
+        Swal.fire("ไม่สามารถบันทึกข้อมูลได้", json.message || "", "error")
       }
-    } catch (error) {
-      setErrorMessagePass(error.response ? error.response.data.message : "An error occurred");
+    } catch (err) {
+      console.error(err)
+      Swal.fire("เกิดข้อผิดพลาดในการบันทึก", "", "error")
+    } finally {
+      setSaving(false)
     }
-  };
+  }
+
+  if (loading) return <p className="text-center text-gray-500 py-10">⏳ กำลังโหลดข้อมูล...</p>
 
   return (
-    <section className="overflow-hidden pb-20 pt-35 md:p-20 xl:pb-25 xl:pt-20">
-    <main >
-      <h1 className="text-2xl font-bold">Profile</h1>
+    <div className="max-w-3xl mx-auto p-6 bg-white shadow rounded mt-8">
+      <h1 className="text-xl font-bold text-green-800 mb-6">แก้ไขข้อมูลส่วนตัว</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="text-sm font-medium text-gray-700">รหัสนักศึกษา</label>
+          <input
+            type="text"
+            value={student?.std_code || ""}
+            readOnly
+            className="mt-1 w-full border px-3 py-2 rounded bg-gray-100 text-gray-500"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium text-gray-700">ชื่อ - สกุล กรณีเปลี่ยนชื่อต้องแนบหลักฐาน</label>
+          <input
+            type="text"
+            value={student?.name_th || ""}
 
-      {/* Profile Form */}
-      <form onSubmit={handleProfileSubmit} className="my-4">
-      <input
-          type="text"
-          placeholder="Student Code"
-          value={userInfo.std_code}
-          onChange={(e) => setUserInfo({ ...userInfo, std_code: e.target.value })}
-          className="mb-3 p-2 border border-gray-300 rounded w-full"
-          required
-          readOnly
-        />
-        <input
-          type="text"
-          placeholder="Name"
-          value={userInfo.name}
-          onChange={(e) => setUserInfo({ ...userInfo, name: e.target.value })}
-          className="mb-3 p-2 border border-gray-300 rounded w-full"
-          required
-        />
-        
-        <input
-          type="text"
-          placeholder="Faculty"
-          value={userInfo.faculty}
-          onChange={(e) => setUserInfo({ ...userInfo, faculty: e.target.value })}
-          className="mb-3 p-2 border border-gray-300 rounded w-full"
-        />
-        <input
-          type="text"
-          placeholder="Program"
-          value={userInfo.program}
-          onChange={(e) => setUserInfo({ ...userInfo, program: e.target.value })}
-          className="mb-3 p-2 border border-gray-300 rounded w-full"
-        />
-        <input
-          type="text"
-          placeholder="Phone"
-          value={userInfo.phone}
-          onChange={(e) => setUserInfo({ ...userInfo, phone: e.target.value })}
-          className="mb-3 p-2 border border-gray-300 rounded w-full"
-        />
-        <button
-          type="submit"
-          className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200"
-        >
-          Update Profile
-        </button>
-        {errorMessage && <p className="text-red-500 mt-2">{errorMessage}</p>}
-        {successMessage && <p className="text-green-500 mt-2">{successMessage}</p>}
-      </form>
-
-      {/* Change Password Form */}
-      <h2 className="text-xl font-bold mt-8">Change Password</h2>
-      <form onSubmit={handleChangePassword} className="my-4">
-      <input
-          type="hidden"
-          placeholder="Student Code"
-          value={userInfo.std_code}
-          onChange={(e) => setUserInfo({ ...userInfo, std_code: e.target.value })}
-          className="mb-3 p-2 border border-gray-300 rounded w-full"
-          required
-          readOnly
-        />
-        <input
-          type="password"
-          placeholder="New Password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          className="mb-3 p-2 border border-gray-300 rounded w-full"
-          required
-        />
-        <button
-          type="submit"
-          className="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200"
-        >
-          Change Password
-        </button>
-        {errorMessagePass&& <p className="text-red-500 mt-2">{errorMessagePass}</p>}
-        {successMessagePass && <p className="text-green-500 mt-2">{successMessagePass}</p>}
-      </form>
-    </main>
-    </section>
-  );
-};
-
-export default Profile;
+            onChange={(e) => handleChange("name_th", e.target.value)}
+            className="mt-1 w-full border px-3 py-2 rounded"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium text-gray-700">Email ใช้สำหรับติดต่อและรับการแจ้งเตือน</label>
+          <input
+            type="email"
+            value={student?.email || ""}
+            onChange={(e) => handleChange("email", e.target.value)}
+            className="mt-1 w-full border px-3 py-2 rounded"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium text-gray-700">ความประสงค์การแต่งกาย</label>
+          <input
+            type="text"
+            value={student?.citizen || ""}
+            onChange={(e) => handleChange("citizen", e.target.value)}
+            className="mt-1 w-full border px-3 py-2 rounded"
+          />
+        </div>
+      </div>
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="mt-6 bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-semibold"
+      >
+        {saving ? "กำลังบันทึก..." : "💾 บันทึกข้อมูล"}
+      </button>
+    </div>
+  )
+}

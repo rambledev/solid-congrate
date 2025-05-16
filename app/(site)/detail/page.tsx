@@ -9,8 +9,15 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function DetailPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
 
   const [showFixComment, setShowFixComment] = useState(false);
+
+  const [wishTitle, setWishTitle] = useState("");
+const [wishUniform, setWishUniform] = useState("");
 
 
   const [stdCodeReady, setStdCodeReady] = useState<string | null>(null);
@@ -66,7 +73,15 @@ export default function DetailPage() {
       const res = await fetch(`/api/student?std_code=${code}`);
       const data = await res.json();
       if (data.success) {
+
+        console.log("data student std_code = "+data.data);
+        console.log("data student std_code wish_title = "+data.wish_title);
+        console.log("data student std_code wish_uniform = "+data.wish_uniform);
+
+
         setStudent(data.data);
+        setWishTitle(data.data.wish_title || "");
+  setWishUniform(data.data.wish_uniform || "");
       } else {
         setErrorMsg(data.message || "ไม่พบข้อมูลบัณฑิต");
       }
@@ -79,6 +94,7 @@ export default function DetailPage() {
   };
 
   useEffect(() => {
+
     if (
       student?.fix_comment &&
       student.fix_comment.trim() !== "" &&
@@ -86,9 +102,133 @@ export default function DetailPage() {
     ) {
       setShowFixComment(true);
     }
+
+
+    const fetchWish = async () => {
+      if (!student?.std_code) return; // ✅ ป้องกัน undefined
+      try {
+        const res = await fetch(`/api/regist/wish?std_code=${student.std_code}`);
+        const data = await res.json();
+        if (data.success) {
+          setWishTitle(data.data.wish_title || "");
+          setWishUniform(data.data.wish_uniform || "");
+        }
+      } catch (err) {
+        console.error("โหลดข้อมูล wish ล้มเหลว", err);
+      }
+    };
     
-  }, [student]);
+    const fetchUploadedFiles = async () => {
+      if (!student?.std_code) return;
+    
+      try {
+        const res = await fetch(`/api/docs?std_code=${student.std_code}`);
+        const data = await res.json();
+        if (data.success) {
+          setUploadedFiles(data.data);
+        }
+      } catch (err) {
+        console.error("โหลดไฟล์แนบล้มเหลว", err);
+      }
+    };
+    
+    // เรียกใช้หลังโหลด student
+    if (student?.std_code) {
+      fetchWish();
+      fetchUploadedFiles();
+    }
+    
+
   
+    if (student?.std_code) {
+      fetchWish();
+    }
+
+
+
+  }, [student]);
+
+  const updateWish = async () => {
+    const res = await fetch("/api/regist/wish", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        std_code: student?.std_code,
+        wish_title: wishTitle,
+        wish_uniform: wishUniform,
+      }),
+    });
+  
+    const data = await res.json();
+    if (data.success) {
+      Swal.fire("บันทึกสำเร็จ", "", "success");
+    } else {
+      Swal.fire("เกิดข้อผิดพลาด", data.message || "ไม่สามารถบันทึกข้อมูลได้", "error");
+    }
+  };
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      setSelectedFiles(Array.from(files));
+    }
+  };
+  
+  const handleUploadFiles = async () => {
+    if (!student?.std_code || selectedFiles.length === 0) {
+      Swal.fire("กรุณาเลือกไฟล์อย่างน้อย 1 ไฟล์", "", "warning");
+      return;
+    }
+  
+    const formData = new FormData();
+    formData.append("std_code", student.std_code);
+    selectedFiles.forEach((file) => {
+      formData.append("files", file);
+    });
+  
+    try {
+      const res = await fetch("/api/docs", {
+        method: "POST",
+        body: formData,
+      });
+  
+      const data = await res.json();
+      if (data.success) {
+        Swal.fire("อัปโหลดสำเร็จ", "ไฟล์ถูกส่งเรียบร้อยแล้ว", "success");
+        setSelectedFiles([]); // เคลียร์หลังอัปโหลด
+      } else {
+        Swal.fire("ผิดพลาด", data.message, "error");
+      }
+    } catch (err) {
+      console.error("upload error", err);
+      Swal.fire("ผิดพลาด", "ไม่สามารถอัปโหลดไฟล์ได้", "error");
+    }
+  };
+  
+  
+  const handleSaveWishes = async () => {
+    try {
+      const res = await fetch("/api/regist/wish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          std_code: student.std_code,
+          wish_title: wishTitle,
+          wish_uniform: wishUniform,
+        }),
+      });
+  
+      const data = await res.json();
+      if (data.success) {
+        Swal.fire("สำเร็จ", "บันทึกข้อมูลเรียบร้อยแล้ว", "success");
+      } else {
+        Swal.fire("ผิดพลาด", data.message, "error");
+      }
+    } catch (err) {
+      console.error("Save wish error:", err);
+      Swal.fire("ผิดพลาด", "ไม่สามารถบันทึกข้อมูลได้", "error");
+    }
+  };
   
 
   const handleLogin = async () => {
@@ -155,6 +295,13 @@ export default function DetailPage() {
       router.push(`/payment?std_code=${student.std_code}`);
     }
   };
+
+  const handleEditProfile = () => {
+    if (student?.std_code) {
+      router.push(`/profile?std_code=${student.std_code}`);
+    }
+  };
+  
 
   const steps = [
     { label: "อัปโหลดรูปประจำตัว", done: true },
@@ -285,18 +432,87 @@ export default function DetailPage() {
       
         {/* 🟩 Card: 2️⃣ ข้อมูลส่วนตัว */}
         <div className="bg-white text-black rounded-lg shadow p-4">
-          <h3 className="text-lg font-bold text-green-800 mb-4">2️⃣ ข้อมูลส่วนตัว</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <p><strong>รหัสบัณฑิต:</strong> {student.std_code}</p>
-            <p><strong>ชื่อ - สกุล:</strong> {student.name_th}</p>
-            <p><strong>ชื่อภาษาอังกฤษ:</strong> {student.name_en}</p>
-            <p><strong>วันเกิด:</strong> {formatThaiDateDDMMYYYY(student.birthdate)}</p>
-            <p><strong>คณะ:</strong> {student.faculty}</p>
-            <p><strong>สาขา:</strong> {student.program}</p>
-            <p><strong>GPA:</strong> {student.gpa}</p>
-            <p><strong>จังหวัด:</strong> {student.province}</p>
-          </div>
-        </div>
+  <h3 className="text-lg font-bold text-green-800 mb-4">2️⃣ ข้อมูลส่วนตัว</h3>
+
+  {/* 🟢 ข้อมูลบัณฑิต */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-6">
+    <p><strong>รหัสบัณฑิต:</strong> {student.std_code}</p>
+    <p><strong>ชื่อ - สกุล:</strong> {student.name_th}</p>
+    <p><strong>วุฒิปริญญา:</strong> {student.fac_type}</p>
+    <p><strong>ลำดับปริญญา:</strong> {student.fix_num}</p>
+    <p><strong>คณะ:</strong> {student.faculty}</p>
+    <p><strong>สาขา:</strong> {student.program}</p>
+    <p><strong>Email:</strong> {student.email}</p>
+  </div>
+
+  {/* 🟩 ความประสงค์ + แนบไฟล์ แบ่ง 2 คอลัมน์ */}
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {/* ซ้าย: ความประสงค์ */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">ความประสงค์คำนำหน้า</label>
+      <input
+        type="text"
+        value={wishTitle}
+        onChange={(e) => setWishTitle(e.target.value)}
+        className="w-full px-3 py-2 border border-gray-300 rounded text-black"
+        placeholder="เช่น ว่าที่ร้อยตรี"
+      />
+
+      <label className="block text-sm font-medium text-gray-700 mt-4 mb-1">ความประสงค์การแต่งกาย</label>
+      <input
+        type="text"
+        value={wishUniform}
+        onChange={(e) => setWishUniform(e.target.value)}
+        className="w-full px-3 py-2 border border-gray-300 rounded text-black"
+        placeholder="เช่น เต็มยศ"
+      />
+    </div>
+
+    {/* ขวา: แนบไฟล์ */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">แนบหลักฐาน (เลือกได้หลายไฟล์พร้อมกัน)</label>
+      <input
+        type="file"
+        multiple
+        onChange={handleFileChange}
+        className="block w-full text-sm text-white
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-green-700 file:text-white
+                  hover:file:bg-green-800"
+      />
+
+      {/* แสดงรายชื่อไฟล์ที่เลือก */}
+      {selectedFiles.length > 0 && (
+        <ul className="mt-2 list-disc list-inside text-sm text-black">
+          {selectedFiles.map((file, idx) => (
+            <li key={idx}>{file.name}</li>
+          ))}
+        </ul>
+      )}
+
+      {/* ปุ่มอัปโหลด */}
+      <button
+        onClick={handleUploadFiles}
+        className="mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded flex items-center gap-2"
+      >
+        📎 อัปโหลดไฟล์
+      </button>
+    </div>
+  </div>
+
+  {/* ปุ่มบันทึก */}
+  <div className="mt-6 text-center">
+    <button
+      onClick={handleSaveWishes}
+      className="bg-green-700 hover:bg-green-800 text-white font-bold px-6 py-2 rounded"
+    >
+      💾 บันทึกความประสงค์
+    </button>
+  </div>
+</div>
+
       
         {/* 🟩 Card: 3️⃣ แบบสอบถามการมีงานทำ */}
         <div className="bg-white text-black rounded-lg shadow p-4">
@@ -334,7 +550,7 @@ export default function DetailPage() {
               🖊️ ลงทะเบียน
             </button>
       
-            {student.regist_status === "ลงทะเบียนแล้ว" && (
+            {student.regist_status === "รอชำระค่าลงทะเบียน" && (
               <button
                 onClick={handlePaymentPrint}
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded"
