@@ -202,8 +202,14 @@ export default function RegisterPage() {
     const requiredFields = [
       "std_code", "full_name", "id_card", "email", "phone", "gender",
       "academic_year", "cost_option", "house_no", "moo", "village",
-      "road", "soi", "subdistrict", "district", "province", "zipcode" , "height" , "weight"
+      "road", "soi", "subdistrict", "district", "province", "zipcode"
     ];
+    
+    // เพิ่มเงื่อนไขเฉพาะค่าใช้จ่าย
+    if (["2", "3"].includes(form.cost_option)) {
+      requiredFields.push("weight", "height");
+    }
+    
 
     for (const key of requiredFields) {
       if (!form[key as keyof typeof form]) {

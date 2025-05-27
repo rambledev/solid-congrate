@@ -194,7 +194,7 @@ useEffect(() => {
   </div>
 
   <div>
-    <label htmlFor="address" className="block font-medium mb-1">ที่อยู่<span className="text-red-500">*</span></label>
+    <label htmlFor="address" className="block font-medium mb-1">ที่อยู่ปัจจุบัน<span className="text-red-500">*</span></label>
     <input id="address" name="address" value={formData.address} onChange={handleChange} placeholder="ที่อยู่" className="w-full p-2 border rounded" />
   </div>
 
@@ -226,10 +226,16 @@ useEffect(() => {
 
   {/* Datalist ที่แสดงรายการตำบล */}
   <datalist id="subdistricts">
-    {Array.from(new Set(addressList.map((item) => item.district))).map((district, idx) => (
-      <option key={idx} value={district} />
-    ))}
-  </datalist>
+  {Array.from(
+    new Map(
+      addressList.map(item => [item.district, item])
+    ).values()
+  ).map((item, idx) => (
+    <option key={idx} value={item.district}>
+      {item.district} ({item.amphoe})
+    </option>
+  ))}
+</datalist>
 </div>
 
 

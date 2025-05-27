@@ -75,3 +75,33 @@ export async function GET(req: Request) {
     }
   }
   
+
+  export async function DELETE(req: Request) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const id = searchParams.get("id");
+  
+      if (!id) {
+        return NextResponse.json(
+          { success: false, message: "Missing id" },
+          { status: 400 }
+        );
+      }
+  
+      const client = await pool.connect();
+  
+      // ลบไฟล์จากดิสก์ด้วยก็ได้ ถ้าต้องการ
+      await client.query(`DELETE FROM tb_docs WHERE id = $1`, [id]);
+  
+      client.release();
+  
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      console.error("DELETE docs error:", error);
+      return NextResponse.json(
+        { success: false, message: "เกิดข้อผิดพลาดในการลบไฟล์" },
+        { status: 500 }
+      );
+    }
+  }
+  

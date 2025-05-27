@@ -1,83 +1,97 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import {
-  Button,
-  Card,
-  CardContent,
-  Typography,
-  TextField,
-  Box,
-} from '@mui/material'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function AdminLoginPage() {
-  const router = useRouter()
-  const [form, setForm] = useState({ username: '', password: '' })
-  const [error, setError] = useState('')
+export default function LoginForm() {
+  const [id, setId] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
 
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    })
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id, password }),
+      });
 
-    const data = await res.json()
-    if (res.ok && data.success) {
-      if (data.user.role !== 'admin') {
-        setError('ไม่ใช่ผู้ดูแลระบบ')
-        return
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
       }
 
-      sessionStorage.setItem('user', JSON.stringify(data.user))
-      router.push('/admin/dashboard')
-    } else {
-      setError(data.message || 'เข้าสู่ระบบไม่สำเร็จ')
+      if (data.message === 'Please change your password') {
+        // redirect to change password page
+        router.push(`/auth/change-password?userId=${data.userId}`);
+      } else {
+        // redirect based on role
+        if (data.user.role === 'admin') {
+          router.push('/admin');
+        } else if (data.user.role === 'cio') {
+          router.push('/cio');
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
     }
-  }
+  };
 
   return (
-    <Box className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 to-white p-4">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardContent>
-          <Typography variant="h5" className="mb-6 font-bold text-center">
-            เข้าสู่ระบบผู้ดูแลระบบ
-          </Typography>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
+        <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
+        
+        {error && (
+          <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">
+            {error}
+          </div>
+        )}
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <TextField
-              label="รหัสผู้ใช้"
-              variant="outlined"
-              fullWidth
-              value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label htmlFor="id" className="block text-sm font-medium text-gray-700">
+              ID
+            </label>
+            <input
+              type="text"
+              id="id"
+              value={id}
+              onChange={(e) => setId(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              required
             />
-            <TextField
-              label="รหัสผ่าน"
+          </div>
+
+          <div className="mb-6">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <input
               type="password"
-              variant="outlined"
-              fullWidth
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              required
             />
-            {error && (
-              <Typography className="text-red-500 text-sm">{error}</Typography>
-            )}
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              type="submit"
-              className="mt-2"
-            >
-              เข้าสู่ระบบ
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </Box>
-  )
+          </div>
+
+          <button
+            type="submit"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            Sign in
+          </button>
+        </form>
+      </div>
+    </div>
+  );
 }

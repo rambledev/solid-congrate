@@ -7,7 +7,7 @@ export async function POST(req: Request) {
 
   if (!std_code || !comment || !student_email) {
     return NextResponse.json(
-      { success: false, message: 'std_code, comment, และ student_email เป็นข้อมูลที่จำเป็น' },
+      { success: false, message: 'ไม่พบ Email ปลายทาง สำหรับรับการแจ้งเตือน การเตือนจะแสดงหลังจาก บัฒฑิต login แล้วเท่านั้น...' },
       { status: 400 }
     )
   }

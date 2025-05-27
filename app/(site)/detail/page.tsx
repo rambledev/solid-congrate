@@ -6,6 +6,15 @@ import Banner from "@/components/Banner";
 import Swal from "sweetalert2";
 import { motion, AnimatePresence } from "framer-motion";
 
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 2500,
+  timerProgressBar: true,
+});
+
+
 export default function DetailPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -125,12 +134,13 @@ const [wishUniform, setWishUniform] = useState("");
         const res = await fetch(`/api/docs?std_code=${student.std_code}`);
         const data = await res.json();
         if (data.success) {
-          setUploadedFiles(data.data);
+          setUploadedFiles(data.files);
         }
       } catch (err) {
         console.error("โหลดไฟล์แนบล้มเหลว", err);
       }
     };
+    
     
     // เรียกใช้หลังโหลด student
     if (student?.std_code) {
@@ -138,12 +148,6 @@ const [wishUniform, setWishUniform] = useState("");
       fetchUploadedFiles();
     }
     
-
-  
-    if (student?.std_code) {
-      fetchWish();
-    }
-
 
 
   }, [student]);
@@ -194,14 +198,34 @@ const [wishUniform, setWishUniform] = useState("");
   
       const data = await res.json();
       if (data.success) {
-        Swal.fire("อัปโหลดสำเร็จ", "ไฟล์ถูกส่งเรียบร้อยแล้ว", "success");
-        setSelectedFiles([]); // เคลียร์หลังอัปโหลด
+        Toast.fire({ icon: "success", title: "อัปโหลดไฟล์เรียบร้อยแล้ว" });
+        setSelectedFiles([]);
+        // โหลดใหม่หลังอัปโหลด
+        const res = await fetch(`/api/docs?std_code=${student.std_code}`);
+        const updated = await res.json();
+        if (updated.success) setUploadedFiles(updated.files);
       } else {
-        Swal.fire("ผิดพลาด", data.message, "error");
+        Toast.fire({ icon: "error", title: data.message || "ไม่สามารถอัปโหลดได้" });
       }
     } catch (err) {
       console.error("upload error", err);
-      Swal.fire("ผิดพลาด", "ไม่สามารถอัปโหลดไฟล์ได้", "error");
+      Toast.fire({ icon: "error", title: "เกิดข้อผิดพลาดในการอัปโหลด" });
+    }
+  };
+  
+  const handleDeleteFile = async (fileId: string) => {
+    try {
+      const res = await fetch(`/api/docs?id=${fileId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        Toast.fire({ icon: "success", title: "ลบไฟล์เรียบร้อยแล้ว" });
+        setUploadedFiles((prev) => prev.filter((f) => f.id !== fileId));
+      } else {
+        Toast.fire({ icon: "error", title: data.message || "ไม่สามารถลบไฟล์ได้" });
+      }
+    } catch (err) {
+      console.error("delete error", err);
+      Toast.fire({ icon: "error", title: "เกิดข้อผิดพลาดในการลบ" });
     }
   };
   
@@ -470,36 +494,66 @@ const [wishUniform, setWishUniform] = useState("");
 
     {/* ขวา: แนบไฟล์ */}
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">แนบหลักฐาน (เลือกได้หลายไฟล์พร้อมกัน)</label>
-      <input
-        type="file"
-        multiple
-        onChange={handleFileChange}
-        className="block w-full text-sm text-white
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-green-700 file:text-white
-                  hover:file:bg-green-800"
-      />
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    แนบหลักฐาน (เลือกได้หลายไฟล์พร้อมกัน)
+  </label>
+  <input
+    type="file"
+    multiple
+    onChange={handleFileChange}
+    className="block w-full text-sm text-white
+              file:mr-4 file:py-2 file:px-4
+              file:rounded file:border-0
+              file:text-sm file:font-semibold
+              file:bg-green-700 file:text-white
+              hover:file:bg-green-800"
+  />
 
-      {/* แสดงรายชื่อไฟล์ที่เลือก */}
-      {selectedFiles.length > 0 && (
-        <ul className="mt-2 list-disc list-inside text-sm text-black">
-          {selectedFiles.map((file, idx) => (
-            <li key={idx}>{file.name}</li>
-          ))}
-        </ul>
-      )}
+  {/* รายชื่อไฟล์ที่เลือก */}
+  {selectedFiles.length > 0 && (
+    <ul className="mt-2 list-disc list-inside text-sm text-black">
+      {selectedFiles.map((file, idx) => (
+        <li key={idx}>{file.name}</li>
+      ))}
+    </ul>
+  )}
 
-      {/* ปุ่มอัปโหลด */}
-      <button
-        onClick={handleUploadFiles}
-        className="mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded flex items-center gap-2"
-      >
-        📎 อัปโหลดไฟล์
-      </button>
+  {/* ปุ่มอัปโหลด เฉพาะเมื่อเลือกไฟล์ */}
+  {selectedFiles.length > 0 && (
+    <button
+      onClick={handleUploadFiles}
+      className="mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded flex items-center gap-2"
+    >
+      📎 อัปโหลดไฟล์
+    </button>
+  )}
+
+  {/* รายชื่อไฟล์ที่เคยแนบ */}
+  {Array.isArray(uploadedFiles) && uploadedFiles.length > 0 && (
+  <div className="mt-4">
+    <p className="text-sm font-medium text-gray-700 mb-1">ไฟล์ที่แนบแล้ว:</p>
+    <ul className="text-sm text-black space-y-1">
+      {uploadedFiles.map((file: any, idx) => (
+        <li
+          key={file?.id || idx}
+          className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded"
+        >
+          <span className="truncate">{file?.original_name || "ไม่ทราบชื่อไฟล์"}</span>
+          <button
+            onClick={() => handleDeleteFile(file?.id)}
+            className="ml-4 text-red-600 hover:text-red-800 font-bold"
+          >
+            ❌
+          </button>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
+
     </div>
+
+
   </div>
 
   {/* ปุ่มบันทึก */}

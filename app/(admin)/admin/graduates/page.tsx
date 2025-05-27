@@ -16,6 +16,7 @@ type Graduate = {
   email: string
   fix_comment: string
   payment_status: string
+  fix_num: string
 }
 
 const presetMessages = [
@@ -174,8 +175,7 @@ export default function GraduatesPage() {
         <table className="min-w-full bg-white border">
           <thead>
             <tr className="text-left text-gray-500 uppercase text-sm border-b">
-              <th className="py-3 px-6 border">รหัส</th>
-              <th className="py-3 px-6 border">ชื่อ</th>
+              <th className="py-3 px-6 border">บัณฑิต</th>
               <th className="py-3 px-6 border">คณะ</th>
               <th className="py-3 px-6 border">สาขา</th>
               <th className="py-3 px-6 border">วุฒิ</th>
@@ -189,6 +189,7 @@ export default function GraduatesPage() {
             {currentRows.map((grad, index) => (
               <tr key={index} className="border hover:bg-gray-50">
                 <td className="py-4 px-6 border">
+                  <div className='text-center'>{grad.name_th}</div>
                   <div className={`p-1 rounded ${getBgColor(grad.fix_comment)}`}>{grad.std_code}</div>
                   <img
                     src={grad.img && grad.img.trim() !== "" ? "/uploads/" + grad.img.trim() : "/blank.png"}
@@ -196,8 +197,8 @@ export default function GraduatesPage() {
                     className="w-[150px] h-[200px] object-cover rounded shadow-md mt-2"
                     crossOrigin="anonymous"
                   />
+                  <span>ลำดับปริญญา:{grad.fix_num}</span>
                 </td>
-                <td className="py-4 px-6 border">{grad.name_th}</td>
                 <td className="py-4 px-6 border">{grad.faculty}</td>
                 <td className="py-4 px-6 border">{grad.program}</td>
                 <td className="py-4 px-6 border">{grad.fac_type}</td>
