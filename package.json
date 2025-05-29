@@ -53,6 +53,7 @@
     "react-hot-toast": "^2.4.1",
     "react-icons": "^5.5.0",
     "react-perfect-scrollbar": "^1.5.8",
+    "react-vertical-timeline-component": "^3.5.3",
     "recharts": "^2.15.3",
     "sass": "^1.87.0",
     "sweetalert2": "^11.19.1",
@@ -62,6 +63,10 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@iconify/json": "^2.2.342",
+    "@iconify/tools": "^4.1.2",
+    "@iconify/types": "^2.0.0",
+    "@iconify/utils": "^2.3.0",
     "@types/bcrypt": "^5.0.1",
     "@types/node": "^20.8.9",
     "@types/qrcode.react": "^1.0.5",

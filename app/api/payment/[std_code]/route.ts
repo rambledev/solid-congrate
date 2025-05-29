@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import pool from "@/lib/db";
 
-export async function GET(req: Request, { params }: { params: { std_code: string } }) {
-  const { std_code } = params;
+export async function GET(req: NextRequest) {
+  // ดึงค่า std_code จาก URL โดยตรง
+  const url = new URL(req.url);
+  const std_code = url.pathname.split("/").pop();
+
+  if (!std_code) {
+    return NextResponse.json({ success: false, message: "Missing std_code" }, { status: 400 });
+  }
 
   try {
     const client = await pool.connect();
@@ -48,7 +55,7 @@ export async function GET(req: Request, { params }: { params: { std_code: string
       height: cost_option >= 2 ? row.height : null,
       weight: cost_option >= 2 ? row.weight : null,
       amount: parseFloat(row.price),
-      idCard: row.id_card
+      idCard: row.id_card,
     };
 
     return NextResponse.json(payload);

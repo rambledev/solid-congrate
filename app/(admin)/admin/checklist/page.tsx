@@ -6,24 +6,30 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
 
-const ChecklistPage = () => {
-  const [checklistData, setChecklistData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5); // จำนวนรายการต่อหน้า
+// ✅ กำหนดชนิดของข้อมูลใน checklist
+interface ChecklistItem {
+  id: string;
+  name: string;
+  std_code: string;
+  timestamp: string;
+  check_by: string;
+}
 
-  // ฟังก์ชันเพื่อดึงข้อมูลจาก API
+const ChecklistPage = () => {
+  const [checklistData, setChecklistData] = useState<ChecklistItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+
   const fetchChecklistData = async () => {
     try {
       const response = await fetch('/api/checklist');
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
+      if (!response.ok) throw new Error('Network response was not ok');
       const data = await response.json();
       setChecklistData(data.data);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
@@ -31,73 +37,73 @@ const ChecklistPage = () => {
   };
 
   useEffect(() => {
-    fetchChecklistData(); // เรียกใช้งานครั้งแรก
-
-    const interval = setInterval(() => {
-      fetchChecklistData(); // รีเฟรชข้อมูลทุก 5 วินาที
-    }, 5000);
-
-    return () => clearInterval(interval); // เคลียร์เมื่อ component ถูก unmounted
+    fetchChecklistData();
+    const interval = setInterval(fetchChecklistData, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) return <div className="text-center">Loading...</div>;
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
-  // ฟังก์ชันสำหรับแปลง timestamp ให้เป็นรูปแบบที่ต้องการ
-  const formatDateTime = (timestamp) => {
+  const formatDateTime = (timestamp: string) => {
     const date = new Date(timestamp);
-    const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
-    return date.toLocaleString('th-TH', options).replace(',', '').replace('/', '-').replace('/', '-');
+    const options: Intl.DateTimeFormatOptions = {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    };
+    return date
+      .toLocaleString('th-TH', options)
+      .replace(',', '')
+      .replace(/\//g, '-');
   };
 
-  // ฟังก์ชันสำหรับค้นหาข้อมูล
-  const filteredData = checklistData.filter(item => {
-    if (!selectedDate) return true; // ถ้าไม่เลือกวันที่ ให้แสดงทุกตัว
+  const filteredData = checklistData.filter((item) => {
+    if (!selectedDate) return true;
     const itemDate = new Date(item.timestamp).toLocaleDateString();
-    return itemDate === selectedDate.toLocaleDateString(); // เปรียบเทียบวันที่
+    return itemDate === selectedDate.toLocaleDateString();
   });
 
-  // การแบ่งหน้า
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
-  // ฟังก์ชันพิมพ์ตาราง
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
-    printWindow.document.write('<html><head><title>Print</title>');
-    printWindow.document.write('</head><body>');
-    printWindow.document.write(document.querySelector('table').outerHTML);
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    printWindow.print();
+    if (printWindow) {
+      printWindow.document.write('<html><head><title>Print</title></head><body>');
+      printWindow.document.write(document.querySelector('table')?.outerHTML || '');
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      printWindow.print();
+    }
   };
 
-  // ฟังก์ชันส่งออกข้อมูลเป็น Excel
   const handleExport = () => {
     const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(filteredData); // ใช้ filteredData คือข้อมูลที่จะแสดง
+    const ws = XLSX.utils.json_to_sheet(filteredData);
     XLSX.utils.book_append_sheet(wb, ws, 'Checklist');
-    
-    // สร้างไฟล์ Excel
     const excelBuffer = XLSX.write(wb, { bookType: 'xls', type: 'array' });
     const data = new Blob([excelBuffer], { type: 'application/vnd.ms-excel' });
-    saveAs(data, 'checklist.xlsx'); // ตั้งชื่อไฟล์ที่จะดาวน์โหลด
+    saveAs(data, 'checklist.xlsx');
   };
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Checklist</h1>
-      
+
       <DatePicker
         selected={selectedDate}
-        onChange={(date) => setSelectedDate(date)}
+        onChange={(date: Date) => setSelectedDate(date)}
         dateFormat="yyyy-MM-dd"
         placeholderText="Select a date"
         className="mb-4 p-2 border border-gray-300 rounded"
       />
-      
+
       <div className="mb-4">
         <label htmlFor="itemsPerPage" className="mr-2">Items per page:</label>
         <select
@@ -152,6 +158,7 @@ const ChecklistPage = () => {
           ))}
         </tbody>
       </table>
+
       <div className="mt-4">
         <button 
           disabled={currentPage === 1} 
@@ -168,6 +175,7 @@ const ChecklistPage = () => {
           Next
         </button>
       </div>
+
       <div className="mt-4 text-center">
         <span>{`Page ${currentPage} of ${totalPages}`}</span>
       </div>

@@ -47,13 +47,16 @@ const Header = () => {
         >
           <nav>
             <ul className="flex flex-col gap-5 xl:flex-row xl:items-center xl:gap-10">
-              {menuData["public"]?.map((menuItem) => (
-                <li key={menuItem.id}>
-                  <Link href={menuItem.path} className="hover:text-primary">
-                    {menuItem.title}
-                  </Link>
-                </li>
-              ))}
+            {menuData["public"]?.map((menuItem) =>
+  menuItem.path ? (
+    <li key={menuItem.id}>
+      <Link href={menuItem.path} className="hover:text-primary">
+        {menuItem.title}
+      </Link>
+    </li>
+  ) : null
+)}
+
             </ul>
           </nav>
         </div>

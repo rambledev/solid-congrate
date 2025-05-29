@@ -100,7 +100,7 @@ export default function AdminPhotoPage() {
       <label className="text-sm font-medium text-gray-700">{label}</label>
       <div className="flex items-center gap-2">
         <button
-          onClick={() => setValue((prev) => Math.max(prev - 1, min))}
+          onClick={() => setValue(Math.max(value - 1, min))}
           className="px-2 py-1 bg-gray-200 rounded"
         >−</button>
         <input
@@ -113,13 +113,14 @@ export default function AdminPhotoPage() {
           className="flex-1 accent-blue-600"
         />
         <button
-          onClick={() => setValue((prev) => Math.min(prev + 1, max))}
+          onClick={() => setValue(Math.min(value + 1, max))}
           className="px-2 py-1 bg-gray-200 rounded"
         >+</button>
       </div>
       <div className="text-center text-sm text-gray-600">{label} {value}</div>
     </div>
   )
+  
 
   return (
     <div className="min-h-screen bg-white text-white px-4 py-10">
@@ -130,20 +131,19 @@ export default function AdminPhotoPage() {
         ) : (
           <>
             <div className="relative w-full h-[500px] bg-gray-100 mb-4 rounded overflow-hidden">
-              <Cropper
-                image={imageSrc}
-                crop={crop}
-                zoom={zoom}
-                rotation={rotation}
-                aspect={3 / 4}
-                onCropChange={setCrop}
-                onZoomChange={setZoom}
-                onRotationChange={setRotation}
-                onCropComplete={onCropComplete}
-                objectFit="contain"
-                cropShape="rect"
-                flip={{ horizontal: flipX >= 1, vertical: flipY >= 1 }}
-              />
+            <Cropper
+  image={imageSrc}
+  crop={crop}
+  zoom={zoom}
+  rotation={rotation}
+  aspect={3 / 4}
+  onCropChange={setCrop}
+  onZoomChange={setZoom}
+  onRotationChange={setRotation}
+  onCropComplete={onCropComplete}
+  objectFit="contain"
+/>
+
             </div>
 
             <div className="flex flex-col gap-4 mb-4">
