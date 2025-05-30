@@ -6,11 +6,19 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
 
+interface ChecklistItem {
+  id: string;
+  name: string;
+  std_code: string;
+  timestamp: string;
+  check_by: string;
+}
+
 const ChecklistPage = () => {
-  const [checklistData, setChecklistData] = useState([]);
+  const [checklistData, setChecklistData] = useState<ChecklistItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5); // จำนวนรายการต่อหน้า
 
@@ -24,7 +32,7 @@ const ChecklistPage = () => {
       const data = await response.json();
       setChecklistData(data.data);
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -44,9 +52,16 @@ const ChecklistPage = () => {
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
   // ฟังก์ชันสำหรับแปลง timestamp ให้เป็นรูปแบบที่ต้องการ
-  const formatDateTime = (timestamp) => {
+  const formatDateTime = (timestamp: string) => {
     const date = new Date(timestamp);
-    const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
+    const options: Intl.DateTimeFormatOptions = { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      hour12: false 
+    };
     return date.toLocaleString('th-TH', options).replace(',', '').replace('/', '-').replace('/', '-');
   };
 
@@ -66,12 +81,17 @@ const ChecklistPage = () => {
   // ฟังก์ชันพิมพ์ตาราง
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
-    printWindow.document.write('<html><head><title>Print</title>');
-    printWindow.document.write('</head><body>');
-    printWindow.document.write(document.querySelector('table').outerHTML);
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    printWindow.print();
+    if (printWindow) {
+      printWindow.document.write('<html><head><title>Print</title>');
+      printWindow.document.write('</head><body>');
+      const tableElement = document.querySelector('table');
+      if (tableElement) {
+        printWindow.document.write(tableElement.outerHTML);
+      }
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      printWindow.print();
+    }
   };
 
   // ฟังก์ชันส่งออกข้อมูลเป็น Excel
@@ -81,8 +101,8 @@ const ChecklistPage = () => {
     XLSX.utils.book_append_sheet(wb, ws, 'Checklist');
     
     // สร้างไฟล์ Excel
-    const excelBuffer = XLSX.write(wb, { bookType: 'xls', type: 'array' });
-    const data = new Blob([excelBuffer], { type: 'application/vnd.ms-excel' });
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     saveAs(data, 'checklist.xlsx'); // ตั้งชื่อไฟล์ที่จะดาวน์โหลด
   };
 
@@ -118,13 +138,13 @@ const ChecklistPage = () => {
       <div className="mb-4">
         <button 
           onClick={handlePrint}
-          className="mr-2 px-4 py-2 bg-blue-500 text-white rounded"
+          className="mr-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
           Print
         </button>
         <button 
           onClick={handleExport}
-          className="px-4 py-2 bg-green-500 text-white rounded"
+          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
         >
           Export to Excel
         </button>
@@ -152,25 +172,36 @@ const ChecklistPage = () => {
           ))}
         </tbody>
       </table>
-      <div className="mt-4">
-        <button 
-          disabled={currentPage === 1} 
-          onClick={() => setCurrentPage(currentPage - 1)} 
-          className="mr-2 px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <button 
-          disabled={currentPage === totalPages} 
-          onClick={() => setCurrentPage(currentPage + 1)} 
-          className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
-      <div className="mt-4 text-center">
-        <span>{`Page ${currentPage} of ${totalPages}`}</span>
-      </div>
+      
+      {filteredData.length > 0 && (
+        <>
+          <div className="mt-4 flex justify-center">
+            <button 
+              disabled={currentPage === 1} 
+              onClick={() => setCurrentPage(currentPage - 1)} 
+              className="mr-2 px-4 py-2 bg-gray-300 rounded disabled:opacity-50 hover:bg-gray-400 disabled:hover:bg-gray-300"
+            >
+              Previous
+            </button>
+            <button 
+              disabled={currentPage === totalPages} 
+              onClick={() => setCurrentPage(currentPage + 1)} 
+              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50 hover:bg-gray-400 disabled:hover:bg-gray-300"
+            >
+              Next
+            </button>
+          </div>
+          <div className="mt-4 text-center">
+            <span>{`Page ${currentPage} of ${totalPages} (${filteredData.length} items)`}</span>
+          </div>
+        </>
+      )}
+
+      {filteredData.length === 0 && (
+        <div className="mt-4 text-center text-gray-500">
+          No data found for the selected criteria.
+        </div>
+      )}
     </div>
   );
 };
